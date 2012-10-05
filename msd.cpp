@@ -14,7 +14,7 @@
 #include "obj.h"
 
 #define MAX_VALENCE 64
-#define ROTAMOUNT 0.628f
+#define ROTAMOUNT 5.0f /* in degrees */
 
 using namespace glm;
 using namespace std;
@@ -35,7 +35,7 @@ typedef struct _Object {
     }
 } Object;
 
-vec3 eye(10.0, 0.0, 0.0);
+vec3 eye(5.0, 0.0, 0.0);
 vec3 center(0.0, 0.0, 0.0);
 vec3 up(0.0, 0.0, 1.0);
 
@@ -173,7 +173,7 @@ int main(int argc, char* argv[]) {
     // start graphics
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(500, 500);
+    glutInitWindowSize(1000, 1000);
     glutInitWindowPosition(100, 100);
     glutCreateWindow("Michael's SubDiv");
 
