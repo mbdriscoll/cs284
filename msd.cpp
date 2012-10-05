@@ -32,6 +32,8 @@ public:
     face* faces;
     GLenum polygon_mode;
 
+    _Object() : polygon_mode(GL_LINE) { }
+
     ~_Object() {
         free(this->vertices);
         free(this->faces);
@@ -121,33 +123,16 @@ void reshape(int w, int h) {
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
-        case '=': /* zoom in */
-          eye *= 0.9f;
-          break;
-        case '-': /* zoom out */
-          eye *= 1.1f;
-          break;
-        case 'q': /* quit */
-        case 27:
-          exit(0);
-        case ']': /* increase subdivs */
-          obj->refine();
-          break;
-        case '[': /* decrease subdivs */
-          obj->coarsen();
-          break;
-        case 'p': /* point polygon mode */
-          obj->polygon_mode = GL_POINT;
-          break;
-        case 'l': /* line polygon mode */
-          obj->polygon_mode = GL_LINE;
-          break;
-        case 'f': /* fill polygon mode */
-          obj->polygon_mode = GL_FILL;
-          break;
-        default:
-          printf("Unrecognized key: %c\n", key);
-          break;
+        case '=': eye *= 0.9f; break; /* zoom in */
+        case '-': eye *= 1.1f; break; /* zoom out */
+        case 'q':
+        case 27:  exit(0); /* quit */
+        case ']': obj->refine(); break; /* increase subdivs */
+        case '[': obj->coarsen(); break; /* decrease subdivs */
+        case 'p': obj->polygon_mode = GL_POINT; break; /* point polygon mode */
+        case 'l': obj->polygon_mode = GL_LINE; break; /* line polygon mode */
+        case 'f': obj->polygon_mode = GL_FILL; break; /* face polygon mode */
+        default:  printf("Unrecognized key: %c\n", key); break;
     }
     glutPostRedisplay();
 }
