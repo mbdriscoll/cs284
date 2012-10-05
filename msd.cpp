@@ -7,11 +7,16 @@
 #include <gl/glu.h>
 #include <gl/gl.h>
 
+#include <glm/glm.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+
 #include "obj.h"
 
-
 #define MAX_VALENCE 64
+#define ROTAMOUNT 0.628f
 
+using namespace glm;
 using namespace std;
 
 typedef struct _face {
@@ -29,6 +34,10 @@ typedef struct _Object {
         free(this->faces);
     }
 } Object;
+
+vec3 eye(10.0, 0.0, 0.0);
+vec3 center(0.0, 0.0, 0.0);
+vec3 up(0.0, 0.0, 1.0);
 
 void usage() {
     printf("Usage: ./msd [ <file.OBJ> ]\n");
@@ -70,10 +79,11 @@ void display() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(0.0f,-6.0f,6.0f, 0.0f,0.0f,0.0f, 0.0f,1.0f,1.0f);
+
+    mat4 mv = lookAt(eye,center,up);
+    glLoadMatrixf(&mv[0][0]);
 
     glutWireTeapot(1.0);
-    glutSolidTeapot(1.0);
 
     glutSwapBuffers();
     glFlush();
@@ -88,30 +98,45 @@ void reshape(int w, int h) {
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
-        case '=':
-          /* zoom in */;
+        case '=': /* zoom in */;
+          eye *= 0.9f;
           break;
-        case '-':
-          /* zoom out */;
+        case '-': /* zoom out */;
+          eye *= 1.1f;
           break;
-        case 'q':
+        case 'q': /* quit */
+        case 27:
           exit(0);
         default:
           printf("Unrecognized key: %c\n", key);
           break;
     }
+    glutPostRedisplay();
 }
 
 void special(int key, int x, int y) {
     switch (key) {
-        case 101: printf("up\n"); break;
-        case 103: printf("down\n"); break;
-        case 100: printf("left\n"); break;
-        case 102: printf("right\n"); break;
+        case 101: /* up */
+            eye = rotate(eye, ROTAMOUNT, cross(up,eye));
+            up  = rotate( up, ROTAMOUNT, cross(up,eye));
+            break;
+        case 103: /* down */
+            eye = rotate(eye, -ROTAMOUNT, cross(up,eye));
+            up  = rotate( up, -ROTAMOUNT, cross(up,eye));
+            break;
+        case 100: /* left */
+            eye = rotate(eye, ROTAMOUNT, up);
+            up  = rotate( up, ROTAMOUNT, up);
+            break;
+        case 102: /* right */
+            eye = rotate(eye, -ROTAMOUNT, up);
+            up  = rotate( up, -ROTAMOUNT, up);
+            break;
         default:
           printf("Unrecognized special key: <%d>\n", key);
           break;
     }
+    glutPostRedisplay();
 }
 
 void init_scene() {
@@ -127,14 +152,8 @@ void init_scene() {
     glDepthFunc(GL_LESS);
 
     float pos0[] = {-0.0f, 16.0f, -0.0f, 0.0f };
-    float pos1[] = {-16.0f, -16.0f, 0.0f, 0.0f };
-    float pos2[] = {16.0f, -16.0f, -0.0f, 0.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, pos0);
-    glLightfv(GL_LIGHT1, GL_POSITION, pos1);
-    glLightfv(GL_LIGHT2, GL_POSITION, pos2);
     glEnable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);
-    glEnable(GL_LIGHT2);
 }
 
 int main(int argc, char* argv[]) {
