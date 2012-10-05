@@ -3,12 +3,16 @@
 
 #include <string>
 
+#include <gl/glut.h>
+#include <gl/glu.h>
+#include <gl/gl.h>
+
 #include "obj.h"
 
-#include "glm/glm.hpp"
+
+#define MAX_VALENCE 64
 
 using namespace std;
-using namespace glm;
 
 typedef struct _face {
     int v[3]; // vertices
@@ -49,20 +53,44 @@ Object* parseOBJ(char* path) {
     // populate faces with vertex indices
     obj->numfaces = model->numtriangles;
     for(int i = 0; i < model->numtriangles; i++) {
-        face& f = obj->faces[i];
-        memcpy(f.v, model->triangles[i].vindices, 3*sizeof(GLuint));
+        memcpy(obj->faces[i].v, model->triangles[i].vindices, 3*sizeof(GLuint));
     }
 
-    // populate faces with neighbor indices
-    for(int i = 0; i < obj->numfaces; i++) {
-        face& f = obj->faces[i];
-        //printf("triangle %d has vertices %d,%d,%d\n", i, f.v[0], f.v[1], f.v[2]);
-    }
+    // TODO populate faces with neighbor indices
+    for(int i = 0; i < obj->numfaces; i++)
+        memset(obj->faces[i].n, NULL, 3*sizeof(face*));
 
-    // discard parsing data structure
+    // discard parsing data structure and return
     glmDelete(model);
-
     return obj;
+}
+
+void display() {
+
+}
+
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case '=':
+          /* zoom in */;
+          break;
+        case '-':
+          /* zoom out */;
+          break;
+        case 'q':
+          exit(0);
+        default:
+          printf("Unrecognized key: %c\n", key);
+          break;
+    }
+}
+
+void special(int key, int x, int y) {
+    switch (key) {
+        default:
+          printf("Unrecognized key: <%d>\n", key);
+          break;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -78,6 +106,17 @@ int main(int argc, char* argv[]) {
     // parse OBJ file
     Object* obj = parseOBJ(objpath);
     printf("-- object has %d vertices, %d faces--\n", obj->numvertices, obj->numfaces);
+
+    // start graphics
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(500, 500);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow("Michael's SubDiv");
+    glutDisplayFunc(display);
+    glutKeyboardFunc(keyboard);
+    glutSpecialFunc(special);
+    glutMainLoop();
 
     // cleanup
     delete obj;
