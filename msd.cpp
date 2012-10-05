@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 
 #include <string>
 
@@ -8,10 +9,10 @@
 #include <gl/gl.h>
 
 #include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
 #include "obj.h"
+#include "util.h"
 
 #define MAX_VALENCE 64
 #define ROTAMOUNT 5.0f /* in degrees */
@@ -35,9 +36,9 @@ typedef struct _Object {
     }
 } Object;
 
-vec3 eye(5.0, 0.0, 0.0);
+vec3 eye(0.0, 0.0, 7.0);
 vec3 center(0.0, 0.0, 0.0);
-vec3 up(0.0, 0.0, 1.0);
+vec3 up(0.0, 1.0, 0.0);
 
 void usage() {
     printf("Usage: ./msd [ <file.OBJ> ]\n");
@@ -151,9 +152,13 @@ void init_scene() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthFunc(GL_LESS);
 
-    float pos0[] = {-0.0f, 16.0f, -0.0f, 0.0f };
+    float pos0[] = {0.0f, 16.0f, 0.0f, 0.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, pos0);
     glEnable(GL_LIGHT0);
+
+    float pos1[] = {0.0f, 0.0f, 16.0f, 0.0f };
+    glLightfv(GL_LIGHT1, GL_POSITION, pos1);
+    glEnable(GL_LIGHT1);
 }
 
 int main(int argc, char* argv[]) {

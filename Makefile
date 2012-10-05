@@ -4,7 +4,7 @@ LDFLAGS=-L/opt/local/lib -lgl -lglu -lglut
 
 default: msd
 
-msd: obj.c
+msd: obj.c util.cpp
 
 .PHONY: clean
 
