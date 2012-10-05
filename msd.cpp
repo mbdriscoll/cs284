@@ -25,20 +25,41 @@ typedef struct _face {
     struct _face* n[3]; // neighbors
 } face;
 
-typedef struct _Object {
+typedef class _Object {
+public:
     GLuint numvertices, numfaces;
     GLfloat* vertices;
     face* faces;
+    GLenum polygon_mode;
 
     ~_Object() {
         free(this->vertices);
         free(this->faces);
     }
+
+    void refine() {
+    }
+    void coarsen() {
+    }
+    void render() {
+        glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
+        glBegin(GL_TRIANGLES);
+        for(int i = 0; i < numfaces; i++) {
+            int* v = faces[i].v;
+            glVertex3fv( &vertices[3*v[0]] );
+            glVertex3fv( &vertices[3*v[1]] );
+            glVertex3fv( &vertices[3*v[2]] );
+
+        }
+        glEnd();
+    }
+
 } Object;
 
 vec3 eye(0.0, 0.0, 7.0);
 vec3 center(0.0, 0.0, 0.0);
 vec3 up(0.0, 1.0, 0.0);
+Object* obj;
 
 void usage() {
     printf("Usage: ./msd [ <file.OBJ> ]\n");
@@ -84,7 +105,8 @@ void display() {
     mat4 mv = lookAt(eye,center,up);
     glLoadMatrixf(&mv[0][0]);
 
-    glutWireTeapot(1.0);
+    //glutWireTeapot(1.0);
+    obj->render();
 
     glutSwapBuffers();
     glFlush();
@@ -99,15 +121,30 @@ void reshape(int w, int h) {
 
 void keyboard(unsigned char key, int x, int y) {
     switch (key) {
-        case '=': /* zoom in */;
+        case '=': /* zoom in */
           eye *= 0.9f;
           break;
-        case '-': /* zoom out */;
+        case '-': /* zoom out */
           eye *= 1.1f;
           break;
         case 'q': /* quit */
         case 27:
           exit(0);
+        case ']': /* increase subdivs */
+          obj->refine();
+          break;
+        case '[': /* decrease subdivs */
+          obj->coarsen();
+          break;
+        case 'p': /* point polygon mode */
+          obj->polygon_mode = GL_POINT;
+          break;
+        case 'l': /* line polygon mode */
+          obj->polygon_mode = GL_LINE;
+          break;
+        case 'f': /* fill polygon mode */
+          obj->polygon_mode = GL_FILL;
+          break;
         default:
           printf("Unrecognized key: %c\n", key);
           break;
@@ -172,7 +209,7 @@ int main(int argc, char* argv[]) {
     printf("-- parsing %s --\n", objpath);
 
     // parse OBJ file
-    Object* obj = parseOBJ(objpath);
+    obj = parseOBJ(objpath);
     printf("-- object has %d vertices, %d faces--\n", obj->numvertices, obj->numfaces);
 
     // start graphics
