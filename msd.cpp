@@ -41,8 +41,10 @@ public:
 
     void refine() {
     }
+
     void coarsen() {
     }
+
     void render() {
         glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
         glBegin(GL_TRIANGLES);
