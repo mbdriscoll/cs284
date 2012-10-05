@@ -66,7 +66,24 @@ Object* parseOBJ(char* path) {
 }
 
 void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.0f,-6.0f,6.0f, 0.0f,0.0f,0.0f, 0.0f,1.0f,1.0f);
+
+    glutWireTeapot(1.0);
+    glutSolidTeapot(1.0);
+
+    glutSwapBuffers();
+    glFlush();
+}
+
+void reshape(int w, int h) {
+   glViewport(0,0,w,h);
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   gluPerspective(30,w/h,1,40);
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -87,10 +104,37 @@ void keyboard(unsigned char key, int x, int y) {
 
 void special(int key, int x, int y) {
     switch (key) {
+        case 101: printf("up\n"); break;
+        case 103: printf("down\n"); break;
+        case 100: printf("left\n"); break;
+        case 102: printf("right\n"); break;
         default:
-          printf("Unrecognized key: <%d>\n", key);
+          printf("Unrecognized special key: <%d>\n", key);
           break;
     }
+}
+
+void init_scene() {
+    glClearColor (0.0, 0.0, 0.0, 0.0);
+
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthFunc(GL_LESS);
+
+    float pos0[] = {-0.0f, 16.0f, -0.0f, 0.0f };
+    float pos1[] = {-16.0f, -16.0f, 0.0f, 0.0f };
+    float pos2[] = {16.0f, -16.0f, -0.0f, 0.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, pos0);
+    glLightfv(GL_LIGHT1, GL_POSITION, pos1);
+    glLightfv(GL_LIGHT2, GL_POSITION, pos2);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
+    glEnable(GL_LIGHT2);
 }
 
 int main(int argc, char* argv[]) {
@@ -113,7 +157,11 @@ int main(int argc, char* argv[]) {
     glutInitWindowSize(500, 500);
     glutInitWindowPosition(100, 100);
     glutCreateWindow("Michael's SubDiv");
+
+    init_scene();
+
     glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
     glutSpecialFunc(special);
     glutMainLoop();
