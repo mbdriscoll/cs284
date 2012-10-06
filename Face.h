@@ -5,11 +5,10 @@
 #include <glm/glm.hpp>
 
 class Face {
-  private:
-    GLfloat* vertices;  //vertices
-    GLuint vindices[3]; // vertex indices
-    Face* neighbors[3]; // neighbors
   public:
+    GLfloat* vertices;  //vertices
+    Face* neighbors[4]; // neighbors + sentinel
+    GLuint vindices[3]; // vertex indices
     Face(GLuint* vindices, GLfloat* vertices);
     glm::vec3 normal();
     void render();

@@ -55,6 +55,29 @@ Object* parseOBJ(char* path) {
     for(int i = 0; i < model->numtriangles; i++)
         obj->faces[i] = Face(model->triangles[i].vindices, obj->vertices);
 
+    // set neighbor pointers
+    for(int i = 0; i < model->numtriangles; i++) {
+        Face* f = &obj->faces[i];
+        for(int j = 0; j < model->numtriangles; j++) {
+            Face* g = &obj->faces[j];
+            int shared = 0;
+            for(int k = 0; k < 3; k++)
+                for(int l = 0; l < 3; l++)
+                    if (f->vindices[k] == g->vindices[l])
+                        shared += 1;
+            if (shared == 2) {
+                int k;
+                for(k = 0; k < 3; k++)
+                    if (f->neighbors[k] == NULL)
+                        break;
+                if (k == 3)
+                    printf("Warning, >3 neighbors for vertices (%d %d)\n", i, j);
+                else
+                    f->neighbors[k] = g;
+            }
+        }
+    }
+
     return obj;
 }
 
@@ -102,7 +125,7 @@ void reshape(int w, int h) {
    glViewport(0,0,w,h);
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   gluPerspective(30,w/h,.01,10);
+   gluPerspective(30,w/h,.01,100);
 }
 
 void keyboard(unsigned char key, int x, int y) {

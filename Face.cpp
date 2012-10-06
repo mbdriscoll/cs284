@@ -12,6 +12,7 @@ using namespace glm;
 Face::Face(GLuint* vindices, GLfloat* vertices) :
   vertices(vertices) {
     memcpy(this->vindices, vindices, 3*sizeof(GLuint));
+    memset(neighbors, NULL, 4*sizeof(Face*));
 }
 
 void
