@@ -41,6 +41,11 @@ SubDivObject* parseOBJ(char* path) {
     model = glmReadOBJ(path);
     glmFacetNormals(model);
 
+    // reserve space for objects
+    obj->faces.reserve(model->numtriangles+2);
+    obj->hedges.reserve(3*model->numtriangles+9);
+    obj->vertices.reserve(model->numvertices+3);
+
     for(int i = 0; i < model->numvertices+1; i++) {
         GLfloat* v = &model->vertices[i*3];
         obj->vertices.push_back( new Vertex(v) );
