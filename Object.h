@@ -1,3 +1,4 @@
+#include <vector>
 #include <stack>
 
 #include <gl/glut.h>
@@ -6,15 +7,29 @@
 
 #include <glm/glm.hpp>
 
-class Face;
+typedef glm::vec3 Vertex;
+
+class Hedge;
+
+class Face {
+    Hedge& edge;
+public:
+    void render();
+};
+
+class Hedge {
+    Face& f;
+    Hedge& e;
+    Hedge& n;
+    Vertex& v;
+};
+
 
 class Object {
+    std::vector<Face> faces;
+    std::vector<Hedge> hedges;
+    std::vector<Vertex> vertices;
 public:
-    GLuint numvertices, numfaces;
-    GLfloat* vertices;
-    Face* faces;
-
-    ~Object();
     void render();
     void check();
 };

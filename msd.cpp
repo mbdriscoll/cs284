@@ -14,7 +14,6 @@
 #include "glm.h"
 #include "util.h"
 
-#include "Face.h"
 #include "Object.h"
 
 #define MAX_VALENCE 64
@@ -41,6 +40,7 @@ SubDivObject* parseOBJ(char* path) {
     // parse the .obj file
     model = glmReadOBJ(path);
 
+#if 0
     // allocate space for my representation
     obj->faces = (Face*) malloc(model->numtriangles * sizeof(Face));
     obj->vertices = (GLfloat*) malloc(3 + model->numvertices * 3 * sizeof(GLfloat));
@@ -76,10 +76,10 @@ SubDivObject* parseOBJ(char* path) {
             }
         }
     }
+#endif
 
     obj->check();
 
-    printf("-- object has %d vertices, %d faces--\n", obj->numvertices, obj->numfaces);
     return new SubDivObject(obj);
 }
 
