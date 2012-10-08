@@ -124,6 +124,18 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
+#define MKHEDGES(fid, va, vb, vc) \
+    Face* f ## fid = new Face(); \
+    Hedge* h_ ## va ## _ ## vb = new Hedge(f ## fid, v ## va ); \
+    Hedge* h_ ## vb ## _ ## vc = new Hedge(f ## fid, v ## vb , h_ ## va ## _ ## vb ); \
+    Hedge* h_ ## vc ## _ ## va = new Hedge(f ## fid, v ## vc , h_ ## vb ## _ ## vc ); \
+    h_ ## va ## _ ## vb ->next = h_ ## vc ## _ ## va ; \
+    f ## fid->edge = h_ ## va ## _ ## vb ; \
+    newo->faces.push_back(f ## fid); \
+    newo->hedges.push_back(h_ ## va ## _ ## vb ); \
+    newo->hedges.push_back(h_ ## vb ## _ ## vc ); \
+    newo->hedges.push_back(h_ ## vc ## _ ## va );
+
 void
 Face::refine(Object* newo) {
     Hedge* h0 = this->edge;
@@ -141,49 +153,10 @@ Face::refine(Object* newo) {
     newo->vertices.push_back(v12);
     newo->vertices.push_back(v20);
 
-    Face* f0 = new Face();
-    Hedge* h_0_01 = new Hedge(f0, v0);
-    Hedge* h_01_20 = new Hedge(f0, v01, h_0_01);
-    Hedge* h_20_0 = new Hedge(f0, v20, h_01_20);
-    h_0_01->next = h_20_0;
-    f0->edge = h_0_01;
-    newo->faces.push_back(f0);
-    newo->hedges.push_back(h_0_01);
-    newo->hedges.push_back(h_01_20);
-    newo->hedges.push_back(h_20_0);
-
-    Face* f1 = new Face();
-    Hedge* h_1_12  = new Hedge(f1, v1);
-    Hedge* h_12_01 = new Hedge(f1, v12, h_1_12);
-    Hedge* h_01_1  = new Hedge(f1, v01, h_12_01);
-    h_1_12->next = h_01_1;
-    f1->edge = h_1_12;
-    newo->faces.push_back(f1);
-    newo->hedges.push_back(h_1_12);
-    newo->hedges.push_back(h_12_01);
-    newo->hedges.push_back(h_01_1);
-
-    Face* f2 = new Face();
-    Hedge* h_2_20  = new Hedge(f2, v2);
-    Hedge* h_20_12 = new Hedge(f2, v20, h_2_20);
-    Hedge* h_12_2  = new Hedge(f2, v12, h_20_12);
-    h_2_20->next = h_12_2;
-    f2->edge = h_2_20;
-    newo->faces.push_back(f2);
-    newo->hedges.push_back(h_2_20);
-    newo->hedges.push_back(h_20_12);
-    newo->hedges.push_back(h_12_2);
-
-    Face* fc = new Face();
-    Hedge* h_01_12 = new Hedge(fc, v01);
-    Hedge* h_12_20 = new Hedge(fc, v12, h_01_12);
-    Hedge* h_20_01 = new Hedge(fc, v20, h_12_20);
-    h_01_12->next = h_20_01;
-    fc->edge = h_01_12;
-    newo->faces.push_back(fc);
-    newo->hedges.push_back(h_01_12);
-    newo->hedges.push_back(h_12_20);
-    newo->hedges.push_back(h_20_01);
+    MKHEDGES(0, 0, 01, 20);
+    MKHEDGES(1, 1, 12, 01);
+    MKHEDGES(2, 2, 20, 12);
+    MKHEDGES(3, 01, 12, 20);
 }
 
 Vertex::Vertex(Hedge* h) : edge(NULL) {
