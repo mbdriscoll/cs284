@@ -56,7 +56,7 @@ SubDivObject* parseOBJ(char* path) {
         Hedge* h2 = new Hedge(f, v2, h1);
 
         /* fix up circular references */
-        h0->h = h2;
+        h0->next = h2;
         f->edge = h0;
 
         /* register new stuff with obj */

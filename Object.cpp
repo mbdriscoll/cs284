@@ -4,6 +4,8 @@
 #define max(x,y) (((x)>(y))?(x):(y))
 #define min(x,y) (((x)<(y))?(x):(y))
 
+using namespace glm;
+
 void
 SubDivObject::set_polygon_mode(GLenum mode) {
     polygon_mode = mode;
@@ -60,12 +62,18 @@ SubDivObject::SubDivObject(Object* base) :
 void
 Face::render() {
     Hedge* ch = this->edge;
-    glVertex3fv( (GLfloat*) ch->v );
-    ch = ch->h;
-    glVertex3fv( (GLfloat*) ch->v );
-    ch = ch->h;
-    glVertex3fv( (GLfloat*) ch->v );
+    Vertex *v0, *v1, *v2;
+
+    v0 = this->edge->v;
+    v1 = this->edge->next->v;
+    v2 = this->edge->next->next->v;
+    vec3 norm = normalize( cross(*v2-*v1, *v1-*v0) );
+
+    glNormal3fv( (GLfloat*) &norm  );
+    glVertex3fv( (GLfloat*) v0 );
+    glVertex3fv( (GLfloat*) v1 );
+    glVertex3fv( (GLfloat*) v2 );
 }
 
-Hedge::Hedge(Face* f, Vertex* v, Hedge* h) :
-    f(f), v(v), h(h) { }
+Hedge::Hedge(Face* f, Vertex* v, Hedge* next) :
+    f(f), v(v), next(next), pair(NULL) { }

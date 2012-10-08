@@ -20,10 +20,10 @@ public:
 class Hedge {
 public:
     Face* f;
-    Hedge* h;
-    Hedge* n;
+    Hedge* next;
+    Hedge* pair;
     Vertex* v;
-    Hedge(Face* f, Vertex* v, Hedge* h=NULL);
+    Hedge(Face* f, Vertex* v, Hedge* next=NULL);
 };
 
 
