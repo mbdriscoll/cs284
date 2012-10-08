@@ -43,8 +43,8 @@ Object::render() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, materialShininess);
 
     glBegin(GL_TRIANGLES);
-    foreach(Face& f, faces)
-        f.render();
+    foreach(Face* f, faces)
+        f->render();
     glEnd();
 }
 
@@ -59,4 +59,13 @@ SubDivObject::SubDivObject(Object* base) :
 
 void
 Face::render() {
+    Hedge* ch = this->edge;
+    glVertex3fv( (GLfloat*) ch->v );
+    ch = ch->h;
+    glVertex3fv( (GLfloat*) ch->v );
+    ch = ch->h;
+    glVertex3fv( (GLfloat*) ch->v );
 }
+
+Hedge::Hedge(Face* f, Vertex* v, Hedge* h) :
+    f(f), v(v), h(h) { }

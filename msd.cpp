@@ -40,46 +40,38 @@ SubDivObject* parseOBJ(char* path) {
     // parse the .obj file
     model = glmReadOBJ(path);
 
-#if 0
-    // allocate space for my representation
-    obj->faces = (Face*) malloc(model->numtriangles * sizeof(Face));
-    obj->vertices = (GLfloat*) malloc(3 + model->numvertices * 3 * sizeof(GLfloat));
-
-    // populate vertices
-    obj->numvertices = model->numvertices + 1;
-    memcpy(obj->vertices, model->vertices, 3 + obj->numvertices*3*sizeof(GLfloat));
-
-    // populate faces with vertex indices
-    obj->numfaces = model->numtriangles;
-    for(int i = 0; i < model->numtriangles; i++)
-        obj->faces[i] = Face(model->triangles[i].vindices, obj->vertices);
-
-    // set neighbor pointers
-    for(int i = 0; i < model->numtriangles; i++) {
-        Face* f = &obj->faces[i];
-        for(int j = 0; j < model->numtriangles; j++) {
-            Face* g = &obj->faces[j];
-            int shared = 0;
-            for(int k = 0; k < 3; k++)
-                for(int l = 0; l < 3; l++)
-                    if (f->vindices[k] == g->vindices[l])
-                        shared += 1;
-            if (shared == 2) {
-                int k;
-                for(k = 0; k < 3; k++)
-                    if (f->neighbors[k] == NULL)
-                        break;
-                if (k == 3)
-                    printf("Warning, >3 neighbors for vertices (%d %d)\n", i, j);
-                else
-                    f->neighbors[k] = g;
-            }
-        }
+    for(int i = 0; i < model->numvertices+1; i++) {
+        GLfloat* v = &model->vertices[i*3];
+        obj->vertices.push_back( new vec3(v[0], v[1], v[2]) );
     }
-#endif
+
+    for(int i = 0; i < model->numtriangles; i++) {
+        GLuint* t = model->triangles[i].vindices;
+        Vertex* v0 = obj->vertices[t[0]];
+        Vertex* v1 = obj->vertices[t[1]];
+        Vertex* v2 = obj->vertices[t[2]];
+        Face* f = new Face();;
+        Hedge* h0 = new Hedge(f, v0);
+        Hedge* h1 = new Hedge(f, v1, h0);
+        Hedge* h2 = new Hedge(f, v2, h1);
+
+        /* fix up circular references */
+        h0->h = h2;
+        f->edge = h0;
+
+        /* register new stuff with obj */
+        obj->faces.push_back(f);
+        obj->hedges.push_back(h0);
+        obj->hedges.push_back(h1);
+        obj->hedges.push_back(h2);
+    }
 
     obj->check();
 
+    printf("-- parsed %d vertices, %d faces, and %d edges --\n",
+            (int) obj->vertices.size(),
+            (int) obj->faces.size(),
+            (int) obj->hedges.size()/2);
     return new SubDivObject(obj);
 }
 

@@ -12,24 +12,26 @@ typedef glm::vec3 Vertex;
 class Hedge;
 
 class Face {
-    Hedge& edge;
 public:
+    Hedge* edge;
     void render();
 };
 
 class Hedge {
-    Face& f;
-    Hedge& e;
-    Hedge& n;
-    Vertex& v;
+public:
+    Face* f;
+    Hedge* h;
+    Hedge* n;
+    Vertex* v;
+    Hedge(Face* f, Vertex* v, Hedge* h=NULL);
 };
 
 
 class Object {
-    std::vector<Face> faces;
-    std::vector<Hedge> hedges;
-    std::vector<Vertex> vertices;
 public:
+    std::vector<Face*> faces;
+    std::vector<Hedge*> hedges;
+    std::vector<Vertex*> vertices;
     void render();
     void check();
 };
