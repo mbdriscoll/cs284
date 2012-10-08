@@ -14,6 +14,10 @@ SubDivObject::set_polygon_mode(GLenum mode) {
 
 void
 SubDivObject::refine() {
+    Object* oldo = objs.top();
+    Object* newo = new Object();
+
+    objs.push(newo);
 }
 
 void

@@ -131,8 +131,8 @@ void keyboard(unsigned char key, int x, int y) {
         case '-': eye *= 1.1f; break; /* zoom out */
         case 'q':
         case 27:  exit(0); /* quit */
-        case '[': sdobj->refine(); break; /* increase subdivs */
-        case ']': sdobj->coarsen(); break; /* decrease subdivs */
+        case ']': sdobj->refine(); break; /* increase subdivs */
+        case '[': sdobj->coarsen(); break; /* decrease subdivs */
         case 'p': sdobj->set_polygon_mode(GL_POINT); break; /* point polygon mode */
         case 'l': sdobj->set_polygon_mode(GL_LINE); break; /* line polygon mode */
         case 'f': sdobj->set_polygon_mode(GL_FILL); break; /* face polygon mode */
