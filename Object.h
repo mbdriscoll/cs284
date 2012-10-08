@@ -8,18 +8,23 @@
 #include <glm/glm.hpp>
 
 class Hedge;
+class Object;
 
 class Vertex {
 public:
     glm::vec3 val;
     Hedge* edge;
+
     Vertex(GLfloat* v);
+    Vertex(Hedge* h); // interpolate along hedge to create new v
 };
 
 class Face {
 public:
     Hedge* edge;
+
     void render();
+    void refine(Object* newo);
 };
 
 class Hedge {
