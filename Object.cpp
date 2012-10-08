@@ -34,8 +34,25 @@ Object::render() {
 
     glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
     glBegin(GL_TRIANGLES);
-    for(int i = 0; i < numfaces; i++) {
+    for(int i = 0; i < numfaces; i++)
         faces[i].render();
-    }
     glEnd();
+}
+
+void Object::check() {
+    // check all verticle values < 10.0
+    for(int i = 0; i < 3 * numvertices; i++) {
+        if (vertices[i] > 10.0)
+            printf("suspicious vertex %d: %f\n", i, vertices[i]);
+    }
+
+    for(int i = 0; i < numfaces; i++) {
+        for(int j = 0; j < 3; j++) {
+            int vi = faces[i].vindices[j];
+            if (vi < 0 || vi > 3*numvertices)
+                printf("bad vindex on face %d, entry %d\n", i, j);
+        }
+    }
+
+    printf("Object check completed\n");
 }

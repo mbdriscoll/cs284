@@ -20,4 +20,5 @@ public:
     void refine();
     void coarsen();
     void render();
+    void check();
 };

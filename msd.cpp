@@ -44,11 +44,11 @@ Object* parseOBJ(char* path) {
 
     // allocate space for my representation
     obj->faces = (Face*) malloc(model->numtriangles * sizeof(Face));
-    obj->vertices = (GLfloat*) malloc(model->numvertices * 3 * sizeof(GLfloat));
+    obj->vertices = (GLfloat*) malloc(3 + model->numvertices * 3 * sizeof(GLfloat));
 
     // populate vertices
-    obj->numvertices = model->numvertices;
-    memcpy(obj->vertices, model->vertices, obj->numvertices*3*sizeof(GLfloat));
+    obj->numvertices = model->numvertices + 1;
+    memcpy(obj->vertices, model->vertices, 3 + obj->numvertices*3*sizeof(GLfloat));
 
     // populate faces with vertex indices
     obj->numfaces = model->numtriangles;
@@ -78,6 +78,7 @@ Object* parseOBJ(char* path) {
         }
     }
 
+    obj->check();
     return obj;
 }
 
