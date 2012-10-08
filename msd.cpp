@@ -27,6 +27,7 @@ vec3 eye(0.0, 0.0, 1.0);
 vec3 center(0.0, 0.0, 0.0);
 vec3 up(0.0, 1.0, 0.0);
 GLMmodel* model;
+bool moveLights = true;
 
 void usage() {
     printf("Usage: ./msd [ <file.OBJ> ]\n");
@@ -109,6 +110,8 @@ void display() {
 
 float rot = 0.0;
 void animate() {
+    if (moveLights == false)
+        glutIdleFunc(NULL);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(-10.0, -10.0, -10.0);
@@ -137,6 +140,9 @@ void keyboard(unsigned char key, int x, int y) {
         case 'p': sdobj->set_polygon_mode(GL_POINT); break; /* point polygon mode */
         case 'l': sdobj->set_polygon_mode(GL_LINE); break; /* line polygon mode */
         case 'f': sdobj->set_polygon_mode(GL_FILL); break; /* face polygon mode */
+        case 'a': moveLights = !moveLights; /* move lights */
+                  glutIdleFunc(moveLights ? animate : NULL);
+                  break;
         default:  printf("Unrecognized key: %c\n", key); break;
     }
     glutPostRedisplay();
