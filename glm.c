@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "obj.h"
+#include "glm.h"
 
 
 #define T(x) (model->triangles[(x)])

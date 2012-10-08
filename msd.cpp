@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
-#include "obj.h"
+#include "glm.h"
 #include "util.h"
 
 #include "Face.h"
