@@ -1,26 +1,34 @@
 #include "Face.h"
 #include "Object.h"
 
-Object::Object() : polygon_mode(GL_LINE)
-{ }
-
 Object::~Object() {
     free(this->vertices);
     free(this->faces);
 }
 
 void
-Object::set_polygon_mode(GLenum mode) {
+SubDivObject::set_polygon_mode(GLenum mode) {
     polygon_mode = mode;
     render();
 }
 
 void
-Object::refine() {
+SubDivObject::refine() {
 }
 
 void
-Object::coarsen() {
+SubDivObject::coarsen() {
+    if (objs.size() <= 1) {
+        printf("Cannot refine beyond original mesh.\n");
+        return;
+    }
+    objs.pop();
+}
+
+void
+SubDivObject::render() {
+    glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
+    objs.top()->render();
 }
 
 void
@@ -32,7 +40,6 @@ Object::render() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, materialSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, materialShininess);
 
-    glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
     glBegin(GL_TRIANGLES);
     for(int i = 0; i < numfaces; i++)
         faces[i].render();
@@ -54,5 +61,12 @@ void Object::check() {
         }
     }
 
-    printf("Object check completed\n");
+    printf("-- object integrity established --\n");
 }
+
+SubDivObject::SubDivObject(Object* base) :
+    polygon_mode(GL_LINE)
+{
+    objs.push(base);
+}
+

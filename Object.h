@@ -1,3 +1,5 @@
+#include <stack>
+
 #include <gl/glut.h>
 #include <gl/glu.h>
 #include <gl/gl.h>
@@ -7,18 +9,24 @@
 class Face;
 
 class Object {
-private:
-    GLenum polygon_mode;
 public:
     GLuint numvertices, numfaces;
     GLfloat* vertices;
     Face* faces;
 
-    Object();
     ~Object();
+    void render();
+    void check();
+};
+
+class SubDivObject {
+private:
+    GLenum polygon_mode;
+    std::stack<Object*> objs;
+public:
+    SubDivObject(Object* base);
     void set_polygon_mode(GLenum mode);
     void refine();
     void coarsen();
     void render();
-    void check();
 };

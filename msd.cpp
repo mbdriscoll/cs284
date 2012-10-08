@@ -23,19 +23,18 @@
 using namespace glm;
 using namespace std;
 
-Object* obj;
+SubDivObject* sdobj;
 vec3 eye(0.0, 0.0, 1.0);
 vec3 center(0.0, 0.0, 0.0);
 vec3 up(0.0, 1.0, 0.0);
 GLMmodel* model;
-bool useGlmDraw = false;
 
 void usage() {
     printf("Usage: ./msd [ <file.OBJ> ]\n");
     exit(1);
 }
 
-Object* parseOBJ(char* path) {
+SubDivObject* parseOBJ(char* path) {
     // Create object to return
     Object* obj = new Object();
 
@@ -79,7 +78,9 @@ Object* parseOBJ(char* path) {
     }
 
     obj->check();
-    return obj;
+
+    printf("-- object has %d vertices, %d faces--\n", obj->numvertices, obj->numfaces);
+    return new SubDivObject(obj);
 }
 
 void light() {
@@ -100,12 +101,7 @@ void display() {
     mat4 mv = lookAt(eye,center,up);
     glLoadMatrixf(&mv[0][0]);
 
-    if (useGlmDraw) {
-        glmFacetNormals(model);
-        glmDraw(model, GLM_FLAT);
-    }
-    else
-        obj->render();
+    sdobj->render();
 
     glutSwapBuffers();
 }
@@ -135,12 +131,11 @@ void keyboard(unsigned char key, int x, int y) {
         case '-': eye *= 1.1f; break; /* zoom out */
         case 'q':
         case 27:  exit(0); /* quit */
-        case ']': obj->refine(); break; /* increase subdivs */
-        case '[': obj->coarsen(); break; /* decrease subdivs */
-        case 'p': obj->set_polygon_mode(GL_POINT); break; /* point polygon mode */
-        case 'l': obj->set_polygon_mode(GL_LINE); break; /* line polygon mode */
-        case 'f': obj->set_polygon_mode(GL_FILL); break; /* face polygon mode */
-        case 't': useGlmDraw = !useGlmDraw; break; /* toggle my vs glmDraw rendering */
+        case '[': sdobj->refine(); break; /* increase subdivs */
+        case ']': sdobj->coarsen(); break; /* decrease subdivs */
+        case 'p': sdobj->set_polygon_mode(GL_POINT); break; /* point polygon mode */
+        case 'l': sdobj->set_polygon_mode(GL_LINE); break; /* line polygon mode */
+        case 'f': sdobj->set_polygon_mode(GL_FILL); break; /* face polygon mode */
         default:  printf("Unrecognized key: %c\n", key); break;
     }
     glutPostRedisplay();
@@ -192,8 +187,7 @@ int main(int argc, char* argv[]) {
     printf("-- parsing %s --\n", objpath);
 
     // parse OBJ file
-    obj = parseOBJ(objpath);
-    printf("-- object has %d vertices, %d faces--\n", obj->numvertices, obj->numfaces);
+    sdobj = parseOBJ(objpath);
 
     // start graphics
     glutInit(&argc, argv);
@@ -212,6 +206,6 @@ int main(int argc, char* argv[]) {
     glutMainLoop();
 
     // cleanup
-    delete obj;
+    delete sdobj;
     return 0;
 }
