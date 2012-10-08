@@ -1,6 +1,9 @@
 #include "Face.h"
 #include "Object.h"
 
+#define max(x,y) (((x)>(y))?(x):(y))
+#define min(x,y) (((x)<(y))?(x):(y))
+
 Object::~Object() {
     free(this->vertices);
     free(this->faces);
@@ -25,7 +28,7 @@ SubDivObject::refine() {
     /* copy old vertices */
     newo->vertices = (GLfloat*) malloc(2*(oldo->numvertices+1)*3*sizeof(GLfloat));
     memcpy(newo->vertices, oldo->vertices, (oldo->numvertices+1)*3*sizeof(GLfloat));
-    nvi = oldo->numvertices;
+    nvi = (oldo->numvertices+1)*3;
 
     /* copy old faces */
     newo->faces = (Face*) malloc(4*oldo->numfaces*sizeof(Face));
@@ -34,6 +37,29 @@ SubDivObject::refine() {
         for(int j = 0; j < 3; j++) {
             Face* N = F->neighbors[j];
             if (N == NULL) continue;
+
+            GLuint vone, vtwo, vimin, vimax;
+            for(int x = 0; x < 3; x++)
+                for(int y = 0; y < 3; y++)
+                    if (F->vindices[x] == N->vindices[y]) {
+                        vone = F->vindices[x];
+                        goto vone_found;
+                    }
+vone_found:
+            for(int x = 2; x >= 0; x--)
+                for(int y = 2; y >= 0; y--)
+                    if (F->vindices[x] == N->vindices[y]) {
+                        vtwo = F->vindices[x];
+                        goto vtwo_found;
+                    }
+vtwo_found:
+            assert(vone != vtwo);
+            GLfloat* v1 = &F->vertices[vone];
+            GLfloat* v2 = &F->vertices[vtwo];
+            GLfloat* vn = &newo->vertices[nvi];
+            for (int k = 0; k < 3; k++)
+                vn[k] = (v1[k] + v2[k]) / 2.0;
+            nvi += 3;
 
 
         }
@@ -44,7 +70,8 @@ SubDivObject::refine() {
     for(int i = 0; i < newo->numfaces; i++)
         newo->faces[i].vertices = newo->vertices;
 
-    newo->numvertices = nvi;
+    assert(nvi % 3 == 0);
+    newo->numvertices = nvi/3;
     objs.push(newo);
 }
 
