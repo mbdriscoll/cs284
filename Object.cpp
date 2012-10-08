@@ -17,6 +17,24 @@ SubDivObject::refine() {
     Object* oldo = objs.top();
     Object* newo = new Object();
 
+    int ofi = 0,
+        ovi = 0,
+        nfi = 0,
+        nvi = 0;
+
+    /* copy old vertices */
+    newo->vertices = (GLfloat*) malloc(2*(oldo->numvertices+1)*3*sizeof(GLfloat));
+    memcpy(newo->vertices, oldo->vertices, (oldo->numvertices+1)*3*sizeof(GLfloat));
+    nvi = oldo->numvertices;
+
+    /* copy old faces */
+    newo->numfaces = oldo->numfaces;
+    newo->faces = (Face*)     malloc(newo->numfaces*sizeof(Face));
+    memcpy(newo->faces, oldo->faces, newo->numfaces*sizeof(Face));
+    for(int i = 0; i < newo->numfaces; i++)
+        newo->faces[i].vertices = newo->vertices;
+
+    newo->numvertices = nvi;
     objs.push(newo);
 }
 
