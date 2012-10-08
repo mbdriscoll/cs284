@@ -28,8 +28,18 @@ SubDivObject::refine() {
     nvi = oldo->numvertices;
 
     /* copy old faces */
+    newo->faces = (Face*) malloc(4*oldo->numfaces*sizeof(Face));
+    for(int i = 1; i < oldo->numfaces; i++) {
+        Face* F = &oldo->faces[i];
+        for(int j = 0; j < 3; j++) {
+            Face* N = F->neighbors[j];
+            if (N == NULL) continue;
+
+
+        }
+    }
+
     newo->numfaces = oldo->numfaces;
-    newo->faces = (Face*)     malloc(newo->numfaces*sizeof(Face));
     memcpy(newo->faces, oldo->faces, newo->numfaces*sizeof(Face));
     for(int i = 0; i < newo->numfaces; i++)
         newo->faces[i].vertices = newo->vertices;
