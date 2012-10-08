@@ -57,6 +57,16 @@ Object::render() {
 }
 
 void Object::check() {
+    foreach(Hedge* h, this->hedges) {
+        /* pair pointers are reflexive */
+        if (h->pair != NULL)
+            assert(h == h->pair->pair);
+
+        /* next pointers are circular */
+        assert(h == h->next->next->next);
+    }
+
+    printf("-- consistency tests passed --\n");
 }
 
 SubDivObject::SubDivObject(Object* base) :
