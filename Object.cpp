@@ -1,3 +1,6 @@
+#include <map>
+#include <algorithm>
+
 #include "msd.h"
 #include "Object.h"
 
@@ -5,6 +8,9 @@
 #define min(x,y) (((x)<(y))?(x):(y))
 
 using namespace glm;
+using namespace std;
+
+typedef std::pair<Vertex*,Vertex*> VVpair;
 
 void
 SubDivObject::set_polygon_mode(GLenum mode) {
@@ -62,18 +68,40 @@ SubDivObject::SubDivObject(Object* base) :
 void
 Face::render() {
     Hedge* ch = this->edge;
-    Vertex *v0, *v1, *v2;
 
-    v0 = this->edge->v;
-    v1 = this->edge->next->v;
-    v2 = this->edge->next->next->v;
-    vec3 norm = normalize( cross(*v2-*v1, *v1-*v0) );
+    vec3& v0 = this->edge->v->val;
+    vec3& v1 = this->edge->next->v->val;
+    vec3& v2 = this->edge->next->next->v->val;
+    vec3 norm = normalize( cross(v2-v1, v1-v0) );
 
     glNormal3fv( (GLfloat*) &norm  );
-    glVertex3fv( (GLfloat*) v0 );
-    glVertex3fv( (GLfloat*) v1 );
-    glVertex3fv( (GLfloat*) v2 );
+    glVertex3fv( (GLfloat*) &v0 );
+    glVertex3fv( (GLfloat*) &v1 );
+    glVertex3fv( (GLfloat*) &v2 );
 }
 
 Hedge::Hedge(Face* f, Vertex* v, Hedge* next) :
     f(f), v(v), next(next), pair(NULL) { }
+
+void
+Object::match_pairs() {
+    map<pair<Vertex*,Vertex*>,Hedge*> vtoe;
+    foreach (Hedge* h, this->hedges)
+        vtoe[VVpair(h->v,h->oppv())] = h;
+    foreach (Hedge* h, this->hedges)
+        h->pair = vtoe[VVpair(h->oppv(),h->v)];
+}
+
+inline Hedge*
+Hedge::prev() {
+    return this->next->next;
+}
+
+inline Vertex*
+Hedge::oppv() {
+    return this->next->v;
+}
+
+Vertex::Vertex(GLfloat* v) : edge(NULL) {
+    this->val = vec3(v[0], v[1], v[2]);
+}

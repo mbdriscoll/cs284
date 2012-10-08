@@ -7,9 +7,14 @@
 
 #include <glm/glm.hpp>
 
-typedef glm::vec3 Vertex;
-
 class Hedge;
+
+class Vertex {
+public:
+    glm::vec3 val;
+    Hedge* edge;
+    Vertex(GLfloat* v);
+};
 
 class Face {
 public:
@@ -23,7 +28,10 @@ public:
     Hedge* next;
     Hedge* pair;
     Vertex* v;
+
     Hedge(Face* f, Vertex* v, Hedge* next=NULL);
+    Hedge* prev();
+    Vertex* oppv();
 };
 
 
@@ -34,6 +42,7 @@ public:
     std::vector<Vertex*> vertices;
     void render();
     void check();
+    void match_pairs();
 };
 
 class SubDivObject {

@@ -39,10 +39,11 @@ SubDivObject* parseOBJ(char* path) {
 
     // parse the .obj file
     model = glmReadOBJ(path);
+    glmFacetNormals(model);
 
     for(int i = 0; i < model->numvertices+1; i++) {
         GLfloat* v = &model->vertices[i*3];
-        obj->vertices.push_back( new vec3(v[0], v[1], v[2]) );
+        obj->vertices.push_back( new Vertex(v) );
     }
 
     for(int i = 0; i < model->numtriangles; i++) {
@@ -50,6 +51,7 @@ SubDivObject* parseOBJ(char* path) {
         Vertex* v0 = obj->vertices[t[0]];
         Vertex* v1 = obj->vertices[t[1]];
         Vertex* v2 = obj->vertices[t[2]];
+
         Face* f = new Face();;
         Hedge* h0 = new Hedge(f, v0);
         Hedge* h1 = new Hedge(f, v1, h0);
@@ -65,6 +67,8 @@ SubDivObject* parseOBJ(char* path) {
         obj->hedges.push_back(h1);
         obj->hedges.push_back(h2);
     }
+
+    obj->match_pairs();
 
     obj->check();
 
