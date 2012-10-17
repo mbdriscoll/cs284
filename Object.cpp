@@ -77,10 +77,8 @@ void Object::check() {
         /* next pointers are circular */
         assert(h == h->next->next->next);
 
-        if (h->cv != NULL)
-            assert(h->cv->pair == h->pair->co);
-
-        if (h->co != NULL)
+        /* child near and opposite vertex are reflexive */
+        if (h->cv != NULL || h->co != NULL)
             assert(h->co->pair == h->pair->cv);
     }
 
@@ -136,13 +134,14 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
 
 Vertex*
 Hedge::find_or_create_midpoint(Object* newo) {
-    if (this->pair == NULL || this->pair->co == NULL) {
+    if (this->co != NULL) {
+        return this->co->v;
+    } else if (this->pair != NULL && this->pair->co != NULL) {
+        return this->pair->co->v;
+    } else {
         Vertex* newv = new Vertex(this);
         newo->vertices.push_back(newv);
         return newv;
-    } else {
-        assert(this->pair->co != NULL);
-        return this->pair->co->v;
     }
 }
 
@@ -154,7 +153,7 @@ Hedge::refine(Object* newo) {
 
     Hedge* h2 = new Hedge(f, m1);
     Hedge* h1 = new Hedge(f, m2, h2);
-    Hedge* h0 = new Hedge(f, this->v, h1);
+    Hedge* h0 = new Hedge(f, v, h1);
 
     h2->next = h0;
     f->edge = h0;
@@ -163,9 +162,9 @@ Hedge::refine(Object* newo) {
     this->next->co = h1;
 
     if (this->pair != NULL)
-        h0->set_pair(this->pair->co);
+        h0->set_pair(pair->co);
     if (this->next->pair != NULL)
-        h1->set_pair(this->next->pair->cv);
+        h1->set_pair(next->pair->cv);
 
     newo->hedges.push_back(h0);
     newo->hedges.push_back(h1);
