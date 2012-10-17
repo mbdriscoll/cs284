@@ -163,52 +163,41 @@ Face::refine(Object* newo) {
     newo->faces.push_back(fi);
 
 #if 0
-    Hedge* h_001  = new Hedge(f0, v0);
+    Face* f0 = new Face();
+    Hedge* h_001 = new Hedge(f0, v0);
     Hedge* h_201 = new Hedge(f0, v01, h_001);
-    Hedge* h_200  = new Hedge(f0, v20, h_201);
+    Hedge* h_200 = new Hedge(f0, v20, h_201);
     h_001->next = h_200;
     f0->edge = h_001;
-#if 0
-    h0->cv = h_001;
-    h2->co = h_200;
     h_201->pair = h_201i;
     h_201i->pair = h_201;
-    if (h0->pair != NULL && h0->pair->co != NULL) {
-        h_001->pair = h0->pair->co;
-        h0->pair->co->pair = h_001;
-    }
-    if (h2->pair != NULL && h2->pair->cv != NULL) {
-        h_200->pair = h2->pair->cv;
-        h2->pair->cv = h_200->pair;
-    }
-#endif
+    h_001->pair = (h0->pair != NULL) ? h0->pair->co : NULL;
+    if (h_001->pair) h_001->pair->pair = h_001;
+    h_200->pair = (h2->pair != NULL) ? h2->pair->cv : NULL;
+    if (h_200->pair) h_200->pair->pair = h_200;
     newo->hedges.push_back(h_001);
     newo->hedges.push_back(h_201);
     newo->hedges.push_back(h_200);
     newo->faces.push_back(f0);
-
-    Hedge* h_112  = new Hedge(f1, v1);
-    Hedge* h_012 = new Hedge(f1, v12, h_112);
-    Hedge* h_011  = new Hedge(f1, v01, h_012);
-    h_112->next = h_011;
-    f1->edge = h_112;
-    newo->hedges.push_back(h_112);
-    newo->hedges.push_back(h_012);
-    newo->hedges.push_back(h_011);
-    newo->faces.push_back(f1);
 #endif
 
 #define MKEDGES(a, b, c) \
-    Face* f ## b = new Face(); \
-    Hedge* h_ ## b ## b ## c  = new Hedge(f ## b, v ## b); \
-    Hedge* h_ ## a ## b ## c = new Hedge(f ## b, v ## b ## c, h_ ## b ## b ## c); \
-    Hedge* h_ ## a ## b ## b  = new Hedge(f ## b, v ## a ## b, h_ ## a ## b ## c); \
-    h_ ## b ## b ## c->next = h_ ## a ## b ## b; \
-    f ## b->edge = h_ ## b ## b ## c; \
-    newo->hedges.push_back(h_ ## b ## b ## c); \
-    newo->hedges.push_back(h_ ## a ## b ## c); \
-    newo->hedges.push_back(h_ ## a ## b ## b); \
-    newo->faces.push_back(f ## b);
+    Face* f ## a = new Face(); \
+    Hedge* h_ ## a ## a ## b = new Hedge(f ## a, v ## a); \
+    Hedge* h_ ## c ## a ## b = new Hedge(f ## a, v ## a ## b, h_ ## a ## a ## b); \
+    Hedge* h_ ## c ## a ## a = new Hedge(f ## a, v ## c ## a, h_ ## c ## a ## b); \
+    h_ ## a ## a ## b->next = h_ ## c ## a ## a; \
+    f ## a->edge = h_ ## a ## a ## b; \
+    h_ ## c ## a ## b->pair = h_ ## c ## a ## b ## i; \
+    h_ ## c ## a ## b ## i->pair = h_ ## c ## a ## b; \
+    h_ ## a ## a ## b->pair = (h ## a->pair != NULL) ? h ## a->pair->co : NULL; \
+    if (h_ ## a ## a ## b->pair) h_ ## a ## a ## b->pair->pair = h_ ## a ## a ## b; \
+    h_ ## c ## a ## a->pair = (h ## c->pair != NULL) ? h ## c->pair->cv : NULL; \
+    if (h_ ## c ## a ## a->pair) h_ ## c ## a ## a->pair->pair = h_ ## c ## a ## a; \
+    newo->hedges.push_back(h_ ## a ## a ## b); \
+    newo->hedges.push_back(h_ ## c ## a ## b); \
+    newo->hedges.push_back(h_ ## c ## a ## a); \
+    newo->faces.push_back(f ## a); \
 
     MKEDGES(0, 1, 2);
     MKEDGES(1, 2, 0);
