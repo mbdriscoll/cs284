@@ -34,9 +34,13 @@ public:
     Hedge* pair;
     Vertex* v;
 
+    Hedge* cv;
+    Hedge* co;
+
     Hedge(Face* f, Vertex* v, Hedge* next=NULL);
     Hedge* prev();
     Vertex* oppv();
+    Vertex* find_or_create_midpoint(Object* newo);
 };
 
 

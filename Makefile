@@ -1,4 +1,4 @@
-CXXFLAGS=-I/opt/local/include -I/Users/mbdriscoll/opt/boost-1.47.0/include
+CXXFLAGS=-I/opt/local/include -I/Users/mbdriscoll/opt/boost-1.47.0/include -g -ggdb3
 CFLAGS=-I/opt/local/include
 LDFLAGS=-L/opt/local/lib -lgl -lglu -lglut
 

@@ -99,7 +99,7 @@ Face::render() {
 }
 
 Hedge::Hedge(Face* f, Vertex* v, Hedge* next) :
-    f(f), v(v), next(next), pair(NULL) { }
+    f(f), v(v), next(next), pair(NULL), co(NULL), cv(NULL) { }
 
 void
 Object::match_pairs() {
@@ -124,17 +124,18 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-#define MKHEDGES(fid, va, vb, vc) \
-    Face* f ## fid = new Face(); \
-    Hedge* h_ ## va ## _ ## vb = new Hedge(f ## fid, v ## va ); \
-    Hedge* h_ ## vb ## _ ## vc = new Hedge(f ## fid, v ## vb , h_ ## va ## _ ## vb ); \
-    Hedge* h_ ## vc ## _ ## va = new Hedge(f ## fid, v ## vc , h_ ## vb ## _ ## vc ); \
-    h_ ## va ## _ ## vb ->next = h_ ## vc ## _ ## va ; \
-    f ## fid->edge = h_ ## va ## _ ## vb ; \
-    newo->faces.push_back(f ## fid); \
-    newo->hedges.push_back(h_ ## va ## _ ## vb ); \
-    newo->hedges.push_back(h_ ## vb ## _ ## vc ); \
-    newo->hedges.push_back(h_ ## vc ## _ ## va );
+Vertex*
+Hedge::find_or_create_midpoint(Object* newo) {
+    if (this->pair == NULL ||
+        this->pair->co == NULL) {
+        Vertex* newv = new Vertex(this);
+        newo->vertices.push_back(newv);
+        return newv;
+    } else {
+        assert(this->pair->co->v != NULL);
+        return this->pair->co->v;
+    }
+}
 
 void
 Face::refine(Object* newo) {
@@ -146,17 +147,72 @@ Face::refine(Object* newo) {
     Vertex* v1 = h1->v;
     Vertex* v2 = h2->v;
 
-    Vertex* v01 = new Vertex(h0);
-    Vertex* v12 = new Vertex(h1);
-    Vertex* v20 = new Vertex(h2);
-    newo->vertices.push_back(v01);
-    newo->vertices.push_back(v12);
-    newo->vertices.push_back(v20);
+    Vertex* v01 = h0->find_or_create_midpoint(newo);
+    Vertex* v12 = h1->find_or_create_midpoint(newo);
+    Vertex* v20 = h2->find_or_create_midpoint(newo);
 
-    MKHEDGES(0, 0, 01, 20);
-    MKHEDGES(1, 1, 12, 01);
-    MKHEDGES(2, 2, 20, 12);
-    MKHEDGES(3, 01, 12, 20);
+    Face* fi = new Face();
+    Hedge* h_012i = new Hedge(fi, v01);
+    Hedge* h_120i = new Hedge(fi, v12, h_012i);
+    Hedge* h_201i = new Hedge(fi, v20, h_120i);
+    h_012i->next = h_201i;
+    fi->edge = h_012i;
+    newo->hedges.push_back(h_012i);
+    newo->hedges.push_back(h_120i);
+    newo->hedges.push_back(h_201i);
+    newo->faces.push_back(fi);
+
+#if 0
+    Hedge* h_001  = new Hedge(f0, v0);
+    Hedge* h_201 = new Hedge(f0, v01, h_001);
+    Hedge* h_200  = new Hedge(f0, v20, h_201);
+    h_001->next = h_200;
+    f0->edge = h_001;
+#if 0
+    h0->cv = h_001;
+    h2->co = h_200;
+    h_201->pair = h_201i;
+    h_201i->pair = h_201;
+    if (h0->pair != NULL && h0->pair->co != NULL) {
+        h_001->pair = h0->pair->co;
+        h0->pair->co->pair = h_001;
+    }
+    if (h2->pair != NULL && h2->pair->cv != NULL) {
+        h_200->pair = h2->pair->cv;
+        h2->pair->cv = h_200->pair;
+    }
+#endif
+    newo->hedges.push_back(h_001);
+    newo->hedges.push_back(h_201);
+    newo->hedges.push_back(h_200);
+    newo->faces.push_back(f0);
+
+    Hedge* h_112  = new Hedge(f1, v1);
+    Hedge* h_012 = new Hedge(f1, v12, h_112);
+    Hedge* h_011  = new Hedge(f1, v01, h_012);
+    h_112->next = h_011;
+    f1->edge = h_112;
+    newo->hedges.push_back(h_112);
+    newo->hedges.push_back(h_012);
+    newo->hedges.push_back(h_011);
+    newo->faces.push_back(f1);
+#endif
+
+#define MKEDGES(a, b, c) \
+    Face* f ## b = new Face(); \
+    Hedge* h_ ## b ## b ## c  = new Hedge(f ## b, v ## b); \
+    Hedge* h_ ## a ## b ## c = new Hedge(f ## b, v ## b ## c, h_ ## b ## b ## c); \
+    Hedge* h_ ## a ## b ## b  = new Hedge(f ## b, v ## a ## b, h_ ## a ## b ## c); \
+    h_ ## b ## b ## c->next = h_ ## a ## b ## b; \
+    f ## b->edge = h_ ## b ## b ## c; \
+    newo->hedges.push_back(h_ ## b ## b ## c); \
+    newo->hedges.push_back(h_ ## a ## b ## c); \
+    newo->hedges.push_back(h_ ## a ## b ## b); \
+    newo->faces.push_back(f ## b);
+
+    MKEDGES(0, 1, 2);
+    MKEDGES(1, 2, 0);
+    MKEDGES(2, 0, 1);
 }
 
 Vertex::Vertex(Hedge* h) : edge(NULL) {
