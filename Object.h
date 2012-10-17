@@ -41,6 +41,8 @@ public:
     Hedge* prev();
     Vertex* oppv();
     Vertex* find_or_create_midpoint(Object* newo);
+    Hedge* refine(Object* newo);
+    void set_pair(Hedge* o);
 };
 
 
