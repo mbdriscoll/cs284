@@ -206,33 +206,56 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-Vertex::Vertex(Hedge* h) : edge(NULL) {
-    int v0v = h->v->valence();
-    int v1v = h->oppv()->valence();
-    vec3 half(0.5, 0.5, 0.5);
-    vec3 eighth(0.125, 0.125, 0.125);
-    vec3 sixteenth(0.0625, 0.0625, 0.0625);
-
-    if (h->pair == NULL) {
-        assert(!"can't handle boundary vertices atm");
-    } else if (v0v == 6 && v1v == 6) {
-        vec3& a0 = h->v->val;
-        vec3& b1 = h->next->v->val;
-        vec3& c3 = h->next->next->pair->next->v->val;
-        vec3& d1 = h->next->next->pair->next->next->pair->next->v->val;
-        vec3& c1 = h->next->next->pair->next->next->pair->next->next->pair->next->v->val;
-
-        vec3& a1 = h->pair->v->val;
-        vec3& b0 = h->pair->next->v->val;
-        vec3& c0 = h->pair->next->next->pair->next->v->val;
-        vec3& d0 = h->pair->next->next->pair->next->next->pair->next->v->val;
-        vec3& c2 = h->pair->next->next->pair->next->next->pair->next->next->pair->next->v->val;
-        this->val = half*(a0+a1) + eighth*(b0+b1) - sixteenth*(c0+c1+c2+c3);
-    } else if (v0v == 6 || v1v == 6) {
-    } else {
+float zorin_factor(float j, float K) {
+    assert(K >= 3 && "zorin factor must exceed 2");
+    switch ((int) K) {
+        case 3:
+            if      (j == 0.0) return 5.0/12.0;
+            else if (j == 1.0) return -1.0/12.0;
+            else if (j == 2.0) return -1.0/12.0;
+            else               assert(!"bad index for j #1");
+            break;
+        case 4:
+            if      (j == 0.0) return 3.0/8.0;
+            else if (j == 1.0) return 0.0;
+            else if (j == 2.0) return -1.0/8.0;
+            else if (j == 3.0) return 0.0;
+            else               assert(!"bad index for j #2");
+            break;
+        case 6:
+            switch ((int) j) {
+                case 0: return 0.5;
+                case 1: return 1.0/16.0;
+                case 2: return -1.0/16.0;
+                case 3: return 0.0;
+                case 4: return -1.0/16.0;
+                case 5: return 1.0/16.0;
+                default: assert(!"in zorin factor: bad index for K=6");
+            }
+            break;
+        default:
+            return (0.25 + cos(2.0*M_PI*j/K) + 0.5*cos(4.0*M_PI*j/K)) / K;
+            break;
     }
+}
 
-    this->val = half*(h->v->val + h->oppv()->val);
+Vertex::Vertex(Hedge* h) : edge(NULL) {
+    if (h->pair == NULL)
+        assert(!"can't handle boundary vertices atm");
+
+    vec3 i0(0.0), i1(0.0);
+    Hedge* current;
+    float j, K;
+
+    K = (float) h->v->valence();
+    for(j = 0.0, current=h; j < K; j+=1.0, current=current->next->pair)
+        i1 += zorin_factor(j,K) * current->oppv()->val;
+
+    K = (float) h->pair->v->valence();
+    for(j = 0.0, current=h->pair; j < K; j+=1.0, current=current->next->pair)
+        i1 += zorin_factor(j,K) * current->oppv()->val;
+
+    this->val = i0+i1;
 }
 
 Hedge*
