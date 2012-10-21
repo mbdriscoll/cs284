@@ -17,6 +17,7 @@ public:
 
     Vertex(GLfloat* v);
     Vertex(Vertex* v0, Vertex* v1);
+    int valence();
 };
 
 class Face {

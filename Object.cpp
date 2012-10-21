@@ -39,7 +39,6 @@ SubDivObject::refine() {
     foreach( Face* f, oldo->faces )
         f->refine(newo);
 
-    newo->check();
     oldo->check(true);
     objs.push(newo);
 
@@ -106,8 +105,12 @@ void Object::check(bool postrefine) {
         if (h->co != NULL && h->pair != NULL)
             assert(h->co->pair == h->pair->cv);
 
+        /* v is not oppv */
         if (h->pair != NULL)
             assert(h->v != h->oppv());
+
+        /* vertex.edge ptr is set */
+        assert(h->v->edge != NULL);
 
         /* edges in opp direction */
         if (h->pair != NULL) {
@@ -175,6 +178,7 @@ Object::new_hedge(Face* f, Vertex* v, Hedge* next) {
     newh->co = NULL;
     newh->cv = NULL;
     newh->mp = NULL;
+    v->edge = newh;
     hedges.push_back(newh);
     return newh;
 }
@@ -203,6 +207,8 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
 }
 
 Vertex::Vertex(Vertex* v0, Vertex* v1) : edge(NULL) {
+    int v0valence = v0->valence();
+    int v1valence = v1->valence();
     this->val = (v0->val + v1->val) / vec3(2.0, 2.0, 2.0);
 }
 
@@ -263,14 +269,7 @@ Hedge::set_midpoint(Object* newo) {
     bool has_pair = pair != NULL;
     bool has_remote_mp = has_pair && (pair->mp != NULL);
 
-    if ( has_pair &&  has_local_mp &&  has_remote_mp) {
-        if (mp != pair->mp) {
-            vec3& v0 = mp->val;
-            vec3& v1 = pair->mp->val;
-            //printf("bad pair:\n0x%x %f %f %f\n0x%x %f %f %f\n", mp, v0[0], v0[1], v0[2],
-                                                      //pair->mp, v1[0], v1[1], v1[2]);
-        }
-    }
+    if ( has_pair &&  has_local_mp &&  has_remote_mp) assert(mp == pair->mp);
     if ( has_pair &&  has_local_mp && !has_remote_mp) pair->mp = mp;
     if ( has_pair && !has_local_mp &&  has_remote_mp) mp = pair->mp;
     if ( has_pair && !has_local_mp && !has_remote_mp) {
@@ -290,4 +289,25 @@ Object::new_face(bool interior) {
     f->interior = interior;
     this->faces.push_back(f);
     return f;
+}
+
+int
+Vertex::valence() {
+    int valence = 0;
+    Hedge* current = edge;
+    do {
+        current = current->next->pair;
+        valence++;
+    } while (current != NULL && current != edge);
+
+    /* handle boundary edges */
+    if (current != edge) {
+        current = edge;
+        do {
+            current = current->prev()->pair;
+            valence++;
+        } while (current != NULL && current != edge);
+    }
+    printf("found valence %d\n", valence);
+    return valence;
 }
