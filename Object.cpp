@@ -23,19 +23,30 @@ SubDivObject::refine() {
     Object* oldo = objs.top();
     Object* newo = new Object();
 
+    printf("Requested refinement of obj with %d vertices, %d faces, %d hedges\n",
+            (int) oldo->vertices.size(),
+            (int) oldo->faces.size(),
+            (int) oldo->hedges.size());
+
     /* reserve space */
-    newo->faces.reserve(oldo->faces.size()*4+4);
-    newo->hedges.reserve(oldo->hedges.size()*4+4);
-    newo->vertices.reserve(oldo->vertices.size()*2+2);
+    newo->faces.reserve(oldo->faces.size()*4);
+    newo->hedges.reserve(oldo->hedges.size()*4);
+    newo->vertices.reserve(oldo->vertices.size()*2);
+
+    foreach( Hedge* h, oldo->hedges )
+        h->set_midpoint(newo);
 
     foreach( Face* f, oldo->faces )
         f->refine(newo);
 
+    newo->check();
+    oldo->check(true);
     objs.push(newo);
 
-    newo->check();
-    printf("New level has %d vertices, %d faces\n",
-            (int) newo->vertices.size(), (int) newo->faces.size());
+    printf("Refined obj has %d vertices, %d faces, %d hedges\n",
+            (int) newo->vertices.size(),
+            (int) newo->faces.size(),
+            (int) newo->hedges.size());
 }
 
 void
@@ -68,21 +79,67 @@ Object::render() {
     glEnd();
 }
 
-void Object::check() {
+void Object::check(bool postrefine) {
+    int num_boundaries = 0;
+    int hno = 0;
     foreach(Hedge* h, this->hedges) {
         /* pair pointers are reflexive */
         if (h->pair != NULL)
             assert(h == h->pair->pair);
+        else
+            num_boundaries++;
+
+        /* interior faces have pairs */
+        if (h->f->interior == true)
+            assert(h->pair != NULL);
 
         /* next pointers are circular */
+        assert(h != h->next);
+        assert(h != h->next->next);
         assert(h == h->next->next->next);
 
+        /* vertex and next pointers are in the same direction */
+        assert(h->v == h->next->oppv());
+        assert(h->oppv() == h->prev()->v);
+
         /* child near and opposite vertex are reflexive */
-        if (h->cv != NULL || h->co != NULL)
+        if (h->co != NULL && h->pair != NULL)
             assert(h->co->pair == h->pair->cv);
+
+        if (h->pair != NULL)
+            assert(h->v != h->oppv());
+
+        /* edges in opp direction */
+        if (h->pair != NULL) {
+            assert(h->v->val == h->pair->oppv()->val);
+            assert(h->pair->v->val == h->oppv()->val);
+            assert(h->v == h->pair->oppv());
+            assert(h->pair->v == h->oppv());
+        }
+
+        /* checks for objects after being refined */
+        if (postrefine) {
+            assert(h->co != NULL);
+            assert(h->cv != NULL);
+
+            if (h->pair != NULL) {
+                assert(h->co->pair != NULL);
+                assert(h->cv->pair != NULL);
+
+                assert(h->v == h->cv->v);
+                assert(h->oppv() == h->co->oppv());
+
+                assert(h->cv->pair == h->pair->co);
+                assert(h->co->pair == h->pair->cv);
+            }
+        }
     }
 
-    printf("-- consistency tests passed --\n");
+    printf("-- consistency tests passed (%d vertices, %d faces, %d hedges, %d boundary hedges) --\n",
+            (int) vertices.size(),
+            (int) faces.size(),
+            (int) hedges.size(),
+            num_boundaries);
 }
 
 SubDivObject::SubDivObject(Object* base) :
@@ -93,8 +150,6 @@ SubDivObject::SubDivObject(Object* base) :
 
 void
 Face::render() {
-    Hedge* ch = this->edge;
-
     vec3& v0 = this->edge->v->val;
     vec3& v1 = this->edge->next->v->val;
     vec3& v2 = this->edge->next->next->v->val;
@@ -106,8 +161,19 @@ Face::render() {
     glVertex3fv( (GLfloat*) &v2 );
 }
 
-Hedge::Hedge(Face* f, Vertex* v, Hedge* next) :
-    f(f), v(v), next(next), pair(NULL), co(NULL), cv(NULL) { }
+Hedge*
+Object::new_hedge(Face* f, Vertex* v, Hedge* next) {
+    Hedge* newh = new Hedge();
+    newh->f = f;
+    newh->v = v;
+    newh->next = next;
+    newh->pair = NULL;
+    newh->co = NULL;
+    newh->cv = NULL;
+    newh->mp = NULL;
+    hedges.push_back(newh);
+    return newh;
+}
 
 void
 Object::match_pairs() {
@@ -125,90 +191,99 @@ Hedge::prev() {
 
 inline Vertex*
 Hedge::oppv() {
-    return this->next->next->v;
+    return this->prev()->v;
 }
 
 Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-Vertex*
-Hedge::find_or_create_midpoint(Object* newo) {
-    if (this->co != NULL) {
-        return this->co->v;
-    } else if (this->pair != NULL && this->pair->co != NULL) {
-        return this->pair->co->v;
-    } else {
-        Vertex* newv = new Vertex(this);
-        newo->vertices.push_back(newv);
-        return newv;
-    }
+Vertex::Vertex(Vertex* v0, Vertex* v1) : edge(NULL) {
+    this->val = (v0->val + v1->val) / vec3(2.0, 2.0, 2.0);
 }
 
 Hedge*
 Hedge::refine(Object* newo) {
-    Face* f = new Face();
-    Vertex* m1 = this->find_or_create_midpoint(newo);
-    Vertex* m2 = this->next->find_or_create_midpoint(newo);
+    Face* f = newo->new_face(false);
+    Vertex* m1 = this->mp;
+    Vertex* m2 = this->next->mp;
 
-    Hedge* h2 = new Hedge(f, m1);
-    Hedge* h1 = new Hedge(f, m2, h2);
-    Hedge* h0 = new Hedge(f, v, h1);
+    Hedge* h0 = newo->new_hedge(f, v);
+    Hedge* h2 = newo->new_hedge(f, m1, h0);
+    Hedge* h1 = newo->new_hedge(f, m2, h2);
+    h0->next = f->edge = h1;
 
-    h2->next = h0;
-    f->edge = h0;
+    cv = h0;
+    next->co = h1;
 
-    this->cv = h0;
-    this->next->co = h1;
+    if (pair != NULL)
+        cv->set_pair(pair->co);
+    if (next->pair != NULL)
+        next->co->set_pair(next->pair->cv);
 
-    if (this->pair != NULL)
-        h0->set_pair(pair->co);
-    if (this->next->pair != NULL)
-        h1->set_pair(next->pair->cv);
-
-    newo->hedges.push_back(h0);
-    newo->hedges.push_back(h1);
-    newo->hedges.push_back(h2);
-    newo->faces.push_back(f);
-
-    return h2;
+    return cv->prev();
 }
 
 void
 Face::refine(Object* newo) {
+    Face* f = newo->new_face(true);
+
     Hedge* pair_h0 = this->edge->refine(newo);
     Hedge* pair_h1 = this->edge->next->refine(newo);
     Hedge* pair_h2 = this->edge->next->next->refine(newo);
 
-    Face* f = new Face();
     Vertex* v0 = pair_h0->v;
     Vertex* v1 = pair_h1->v;
     Vertex* v2 = pair_h2->v;
 
-    Hedge* h2 = new Hedge(f, v0);
-    Hedge* h1 = new Hedge(f, v2, h2);
-    Hedge* h0 = new Hedge(f, v1, h1);
-
-    h2->next = h0;
-    f->edge = h0;
+    Hedge* h2 = newo->new_hedge(f, v0);
+    Hedge* h1 = newo->new_hedge(f, v2, h2);
+    Hedge* h0 = newo->new_hedge(f, v1, h1);
+    h2->next = f->edge = h0;
 
     h0->set_pair(pair_h0);
     h1->set_pair(pair_h1);
     h2->set_pair(pair_h2);
-
-    newo->hedges.push_back(h0);
-    newo->hedges.push_back(h1);
-    newo->hedges.push_back(h2);
-    newo->faces.push_back(f);
 }
 
 void
 Hedge::set_pair(Hedge* o) {
     this->pair = o;
-    if (this->pair != NULL)
+    if (o != NULL)
         o->pair = this;
 }
 
-Vertex::Vertex(Hedge* h) : edge(NULL) {
-    this->val = (h->v->val + h->oppv()->val) / vec3(2.0, 2.0, 2.0);
+void
+Hedge::set_midpoint(Object* newo) {
+    bool has_local_mp = mp != NULL;
+    bool has_pair = pair != NULL;
+    bool has_remote_mp = has_pair && (pair->mp != NULL);
+
+    if ( has_pair &&  has_local_mp &&  has_remote_mp) {
+        if (mp != pair->mp) {
+            vec3& v0 = mp->val;
+            vec3& v1 = pair->mp->val;
+            //printf("bad pair:\n0x%x %f %f %f\n0x%x %f %f %f\n", mp, v0[0], v0[1], v0[2],
+                                                      //pair->mp, v1[0], v1[1], v1[2]);
+        }
+    }
+    if ( has_pair &&  has_local_mp && !has_remote_mp) pair->mp = mp;
+    if ( has_pair && !has_local_mp &&  has_remote_mp) mp = pair->mp;
+    if ( has_pair && !has_local_mp && !has_remote_mp) {
+        pair->mp = mp = new Vertex(v, oppv());
+        newo->vertices.push_back(mp);
+    }
+    if (!has_pair &&  has_local_mp) return;
+    if (!has_pair && !has_local_mp) {
+        mp = new Vertex(v, oppv());
+        newo->vertices.push_back(mp);
+    }
+}
+
+Face*
+Object::new_face(bool interior) {
+    Face* f = new Face();
+    f->interior = interior;
+    this->faces.push_back(f);
+    return f;
 }

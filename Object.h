@@ -16,12 +16,13 @@ public:
     Hedge* edge;
 
     Vertex(GLfloat* v);
-    Vertex(Hedge* h); // interpolate along hedge to create new v
+    Vertex(Vertex* v0, Vertex* v1);
 };
 
 class Face {
 public:
     Hedge* edge;
+    bool interior;
 
     void render();
     void refine(Object* newo);
@@ -34,13 +35,13 @@ public:
     Hedge* pair;
     Vertex* v;
 
+    Vertex* mp;
     Hedge* cv;
     Hedge* co;
 
-    Hedge(Face* f, Vertex* v, Hedge* next=NULL);
     Hedge* prev();
     Vertex* oppv();
-    Vertex* find_or_create_midpoint(Object* newo);
+    void set_midpoint(Object* newo);
     Hedge* refine(Object* newo);
     void set_pair(Hedge* o);
 };
@@ -51,8 +52,11 @@ public:
     std::vector<Face*> faces;
     std::vector<Hedge*> hedges;
     std::vector<Vertex*> vertices;
+
+    Hedge* new_hedge(Face* f, Vertex* v, Hedge* next=NULL);
+    Face* new_face(bool interior = false);
     void render();
-    void check();
+    void check(bool postrefine=false);
     void match_pairs();
 };
 
