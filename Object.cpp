@@ -206,10 +206,33 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-Vertex::Vertex(Vertex* v0, Vertex* v1) : edge(NULL) {
-    int v0valence = v0->valence();
-    int v1valence = v1->valence();
-    this->val = (v0->val + v1->val) / vec3(2.0, 2.0, 2.0);
+Vertex::Vertex(Hedge* h) : edge(NULL) {
+    int v0v = h->v->valence();
+    int v1v = h->oppv()->valence();
+    vec3 half(0.5, 0.5, 0.5);
+    vec3 eighth(0.125, 0.125, 0.125);
+    vec3 sixteenth(0.0625, 0.0625, 0.0625);
+
+    if (h->pair == NULL) {
+        assert(!"can't handle boundary vertices atm");
+    } else if (v0v == 6 && v1v == 6) {
+        vec3& a0 = h->v->val;
+        vec3& b1 = h->next->v->val;
+        vec3& c3 = h->next->next->pair->next->v->val;
+        vec3& d1 = h->next->next->pair->next->next->pair->next->v->val;
+        vec3& c1 = h->next->next->pair->next->next->pair->next->next->pair->next->v->val;
+
+        vec3& a1 = h->pair->v->val;
+        vec3& b0 = h->pair->next->v->val;
+        vec3& c0 = h->pair->next->next->pair->next->v->val;
+        vec3& d0 = h->pair->next->next->pair->next->next->pair->next->v->val;
+        vec3& c2 = h->pair->next->next->pair->next->next->pair->next->next->pair->next->v->val;
+        this->val = half*(a0+a1) + eighth*(b0+b1) - sixteenth*(c0+c1+c2+c3);
+    } else if (v0v == 6 || v1v == 6) {
+    } else {
+    }
+
+    this->val = half*(h->v->val + h->oppv()->val);
 }
 
 Hedge*
@@ -273,12 +296,12 @@ Hedge::set_midpoint(Object* newo) {
     if ( has_pair &&  has_local_mp && !has_remote_mp) pair->mp = mp;
     if ( has_pair && !has_local_mp &&  has_remote_mp) mp = pair->mp;
     if ( has_pair && !has_local_mp && !has_remote_mp) {
-        pair->mp = mp = new Vertex(v, oppv());
+        pair->mp = mp = new Vertex(this);
         newo->vertices.push_back(mp);
     }
     if (!has_pair &&  has_local_mp) return;
     if (!has_pair && !has_local_mp) {
-        mp = new Vertex(v, oppv());
+        mp = new Vertex(this);
         newo->vertices.push_back(mp);
     }
 }
@@ -308,6 +331,6 @@ Vertex::valence() {
             valence++;
         } while (current != NULL && current != edge);
     }
-    printf("found valence %d\n", valence);
+
     return valence;
 }

@@ -16,7 +16,7 @@ public:
     Hedge* edge;
 
     Vertex(GLfloat* v);
-    Vertex(Vertex* v0, Vertex* v1);
+    Vertex(Hedge* h);
     int valence();
 };
 
