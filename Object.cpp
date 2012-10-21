@@ -119,16 +119,20 @@ void Object::check(bool postrefine) {
 
         /* checks for objects after being refined */
         if (postrefine) {
+            /* child ptrs are set */
             assert(h->co != NULL);
             assert(h->cv != NULL);
 
             if (h->pair != NULL) {
+                /* child pairs are set */
                 assert(h->co->pair != NULL);
                 assert(h->cv->pair != NULL);
 
+                /* children are in right direction */
                 assert(h->v == h->cv->v);
                 assert(h->oppv() == h->co->oppv());
 
+                /* children are reflexive */
                 assert(h->cv->pair == h->pair->co);
                 assert(h->co->pair == h->pair->cv);
             }
