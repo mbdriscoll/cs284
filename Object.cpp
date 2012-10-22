@@ -333,11 +333,13 @@ Vertex::refine(Object* newo) {
     float n = (float) ni;
     float s = (0.625 - pow((0.375 + 0.25*cos(2.0*M_PI/n)), 2.0)) / n;
 
+    vec3 alpha(5.0/8.0);
+
     vec3 q(0.0);
     Hedge* current = this->edge;
-    assert(current != NULL);
     for(int i = 0; i < ni; i++, current = current->next->pair)
         q += current->pair->v->val;
-    this->val = (1-n*s)*this->val + s*q;
+    q = vec3(1.0/n)*q;
 
+    this->val = alpha*this->val + (vec3(1.0)-alpha)*q;
 }
