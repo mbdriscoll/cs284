@@ -49,7 +49,8 @@ SubDivObject* parseOBJ(char* path) {
 
     for(int i = 1; i <= model->numvertices; i++) {
         GLfloat* v = &model->vertices[i*3];
-        obj->vertices.push_back( new Vertex(v) );
+        GLfloat* t = &model->texcoords[i*3];
+        obj->vertices.push_back( new Vertex(v,t) );
     }
 
     for(int i = 0; i < model->numtriangles; i++) {

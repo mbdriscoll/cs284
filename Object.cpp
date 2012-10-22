@@ -214,11 +214,14 @@ Hedge::oppv() {
     return this->prev()->v;
 }
 
-Vertex::Vertex(GLfloat* v) : edge(NULL), child(NULL) {
+Vertex::Vertex(GLfloat* v, GLfloat* t) : edge(NULL), child(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
+    this->tex = vec3(t[0], t[1], t[2]);
 }
 
-Vertex::Vertex(vec3 val) : edge(NULL), child(NULL), val(val) { }
+Vertex::Vertex(vec3 val, vec3 tex) :
+    edge(NULL), child(NULL), val(val), tex(tex)
+{ }
 
 Vertex::Vertex(Hedge* h) : edge(NULL), child(NULL) {
     if (h->pair == NULL)
@@ -230,6 +233,7 @@ Vertex::Vertex(Hedge* h) : edge(NULL), child(NULL) {
     vec3& v3 = h->pair->next->v->val;
 
     this->val = vec3(3.0/8.0)*(v0+v1) + vec3(1.0/8.0)*(v2+v3);
+    this->tex = vec3(0.5) * (h->v->tex + h->pair->v->tex);
 }
 
 Hedge*
@@ -348,6 +352,6 @@ Vertex::refine(Object* newo) {
     q = vec3(1.0/n)*q;
 
     vec3 childval = alpha*this->val + (vec3(1.0)-alpha)*q;
-    this->child = new Vertex(childval);
+    this->child = new Vertex(childval, tex);
     newo->vertices.push_back(this->child);
 }
