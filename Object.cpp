@@ -210,17 +210,21 @@ float zorin_factor(float j, float K) {
     assert(K >= 3 && "zorin factor must exceed 2");
     switch ((int) K) {
         case 3:
-            if      (j == 0.0) return 5.0/12.0;
-            else if (j == 1.0) return -1.0/12.0;
-            else if (j == 2.0) return -1.0/12.0;
-            else               assert(!"bad index for j #1");
+            switch ((int) j) {
+                case 0: return 5.0/12.0;
+                case 1: return -1.0/12.0;
+                case 2: return -1.0/12.0;
+                default: assert(!"in zorin factor: bad index for K=3");
+            }
             break;
         case 4:
-            if      (j == 0.0) return 3.0/8.0;
-            else if (j == 1.0) return 0.0;
-            else if (j == 2.0) return -1.0/8.0;
-            else if (j == 3.0) return 0.0;
-            else               assert(!"bad index for j #2");
+            switch ((int) j) {
+                case 0: return 3.0/8.0;
+                case 1: return 0.0;
+                case 2: return -1.0/8.0;
+                case 3: return 0.0;
+                default: assert(!"in zorin factor: bad index for K=4");
+            }
             break;
         case 6:
             switch ((int) j) {
@@ -234,9 +238,11 @@ float zorin_factor(float j, float K) {
             }
             break;
         default:
+            assert(!"K default\n");
             return (0.25 + cos(2.0*M_PI*j/K) + 0.5*cos(4.0*M_PI*j/K)) / K;
             break;
     }
+    assert(!"reached ned of zorin factor");
 }
 
 Vertex::Vertex(Hedge* h) : edge(NULL) {
@@ -245,17 +251,33 @@ Vertex::Vertex(Hedge* h) : edge(NULL) {
 
     vec3 i0(0.0), i1(0.0);
     Hedge* current;
-    float j, K;
+    float j;
 
-    K = (float) h->v->valence();
-    for(j = 0.0, current=h; j < K; j+=1.0, current=current->next->pair)
-        i1 += zorin_factor(j,K) * current->oppv()->val;
+    float K0 = (float) h->v->valence();
+    printf("handling vertex with valence %d\n", (int) K0);
+    for(j = 0.0, current=h; j < K0; j+=1.0, current=current->next->pair)
+        i0 += zorin_factor(j,K0) * current->oppv()->val;
 
-    K = (float) h->pair->v->valence();
-    for(j = 0.0, current=h->pair; j < K; j+=1.0, current=current->next->pair)
-        i1 += zorin_factor(j,K) * current->oppv()->val;
+    float K1 = (float) h->pair->v->valence();
+    printf("handling vertex with valence %d\n", (int) K1);
+    for(j = 0.0, current=h->pair; j < K1; j+=1.0, current=current->next->pair)
+        i1 += zorin_factor(j,K1) * current->oppv()->val;
 
-    this->val = i0+i1;
+    vec3& v0 = h->v->val;
+    vec3& v1 = h->pair->v->val;
+
+    // regularity
+    vec3 only0 = i0 + i1 + vec3(0.25)*v1;
+    vec3 only1 = i1 + i0 + vec3(0.25)*v0;
+
+    if (K0 == 6.0 && K1 == 6.0)
+        this->val = i0 + i1;
+    else if (K0 == 6.0)
+        this->val = only0;
+    else if (K1 == 6.0)
+        this->val = only1;
+    else
+        this->val = vec3(0.5)*(only0 + only1);
 }
 
 Hedge*
