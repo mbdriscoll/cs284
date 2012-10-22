@@ -34,6 +34,15 @@ SubDivObject::refine() {
     newo->vertices.reserve(oldo->vertices.size()*2);
 
     foreach( Hedge* h, oldo->hedges )
+        assert(h->pair != NULL && "can only handle closed meshes atm");
+
+    foreach( Hedge* h, oldo->hedges )
+        h->v->edge = h;
+
+    foreach( Vertex* h, oldo->vertices)
+        h->refine(newo);
+
+    foreach( Hedge* h, oldo->hedges )
         h->set_midpoint(newo);
 
     foreach( Face* f, oldo->faces )
@@ -206,78 +215,16 @@ Vertex::Vertex(GLfloat* v) : edge(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-float zorin_factor(float j, float K) {
-    assert(K >= 3 && "zorin factor must exceed 2");
-    switch ((int) K) {
-        case 3:
-            switch ((int) j) {
-                case 0: return 5.0/12.0;
-                case 1: return -1.0/12.0;
-                case 2: return -1.0/12.0;
-                default: assert(!"in zorin factor: bad index for K=3");
-            }
-            break;
-        case 4:
-            switch ((int) j) {
-                case 0: return 3.0/8.0;
-                case 1: return 0.0;
-                case 2: return -1.0/8.0;
-                case 3: return 0.0;
-                default: assert(!"in zorin factor: bad index for K=4");
-            }
-            break;
-        case 6:
-            switch ((int) j) {
-                case 0: return 0.5;
-                case 1: return 1.0/16.0;
-                case 2: return -1.0/16.0;
-                case 3: return 0.0;
-                case 4: return -1.0/16.0;
-                case 5: return 1.0/16.0;
-                default: assert(!"in zorin factor: bad index for K=6");
-            }
-            break;
-        default:
-            assert(!"K default\n");
-            return (0.25 + cos(2.0*M_PI*j/K) + 0.5*cos(4.0*M_PI*j/K)) / K;
-            break;
-    }
-    assert(!"reached ned of zorin factor");
-}
-
 Vertex::Vertex(Hedge* h) : edge(NULL) {
     if (h->pair == NULL)
         assert(!"can't handle boundary vertices atm");
 
-    vec3 i0(0.0), i1(0.0);
-    Hedge* current;
-    float j;
-
-    float K0 = (float) h->v->valence();
-    printf("handling vertex with valence %d\n", (int) K0);
-    for(j = 0.0, current=h; j < K0; j+=1.0, current=current->next->pair)
-        i0 += zorin_factor(j,K0) * current->oppv()->val;
-
-    float K1 = (float) h->pair->v->valence();
-    printf("handling vertex with valence %d\n", (int) K1);
-    for(j = 0.0, current=h->pair; j < K1; j+=1.0, current=current->next->pair)
-        i1 += zorin_factor(j,K1) * current->oppv()->val;
-
     vec3& v0 = h->v->val;
     vec3& v1 = h->pair->v->val;
+    vec3& v2 = h->next->v->val;
+    vec3& v3 = h->pair->next->v->val;
 
-    // regularity
-    vec3 only0 = i0 + i1 + vec3(0.25)*v1;
-    vec3 only1 = i1 + i0 + vec3(0.25)*v0;
-
-    if (K0 == 6.0 && K1 == 6.0)
-        this->val = i0 + i1;
-    else if (K0 == 6.0)
-        this->val = only0;
-    else if (K1 == 6.0)
-        this->val = only1;
-    else
-        this->val = vec3(0.5)*(only0 + only1);
+    this->val = vec3(3.0/8.0)*(v0+v1) + vec3(1.0/8.0)*(v2+v3);
 }
 
 Hedge*
@@ -378,4 +325,19 @@ Vertex::valence() {
     }
 
     return valence;
+}
+
+void
+Vertex::refine(Object* newo) {
+    int ni = valence();
+    float n = (float) ni;
+    float s = (0.625 - pow((0.375 + 0.25*cos(2.0*M_PI/n)), 2.0)) / n;
+
+    vec3 q(0.0);
+    Hedge* current = this->edge;
+    assert(current != NULL);
+    for(int i = 0; i < ni; i++, current = current->next->pair)
+        q += current->pair->v->val;
+    this->val = (1-n*s)*this->val + s*q;
+
 }

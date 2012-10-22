@@ -14,10 +14,12 @@ class Vertex {
 public:
     glm::vec3 val;
     Hedge* edge;
+    Vertex* child;
 
     Vertex(GLfloat* v);
     Vertex(Hedge* h);
     int valence();
+    void refine(Object*);
 };
 
 class Face {
