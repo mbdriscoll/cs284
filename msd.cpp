@@ -45,18 +45,18 @@ SubDivObject* parseOBJ(char* path) {
     // reserve space for objects
     obj->faces.reserve(model->numtriangles);
     obj->hedges.reserve(3*model->numtriangles);
-    obj->vertices.reserve(model->numvertices+1);
+    obj->vertices.reserve(model->numvertices);
 
-    for(int i = 0; i <= model->numvertices; i++) {
+    for(int i = 1; i <= model->numvertices; i++) {
         GLfloat* v = &model->vertices[i*3];
         obj->vertices.push_back( new Vertex(v) );
     }
 
     for(int i = 0; i < model->numtriangles; i++) {
         GLuint* t = model->triangles[i].vindices;
-        Vertex* v0 = obj->vertices[t[0]];
-        Vertex* v1 = obj->vertices[t[1]];
-        Vertex* v2 = obj->vertices[t[2]];
+        Vertex* v0 = obj->vertices[t[0]-1];
+        Vertex* v1 = obj->vertices[t[1]-1];
+        Vertex* v2 = obj->vertices[t[2]-1];
 
         Face* f = obj->new_face(false);
         Hedge* h0 = obj->new_hedge(f, v0);
