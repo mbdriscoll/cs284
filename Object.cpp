@@ -36,12 +36,15 @@ SubDivObject::refine() {
     foreach( Hedge* h, oldo->hedges )
         assert(h->pair != NULL && "can only handle closed meshes atm");
 
+    // link up edge ptrs
     foreach( Hedge* h, oldo->hedges )
         h->v->edge = h;
 
+    // set child vertices
     foreach( Vertex* h, oldo->vertices)
         h->refine(newo);
 
+    // set midpoints
     foreach( Hedge* h, oldo->hedges )
         h->set_midpoint(newo);
 
@@ -141,8 +144,8 @@ void Object::check(bool postrefine) {
                 assert(h->cv->pair != NULL);
 
                 /* children are in right direction */
-                assert(h->v == h->cv->v);
-                assert(h->oppv() == h->co->oppv());
+                assert(h->v->child == h->cv->v);
+                assert(h->oppv()->child == h->co->oppv());
 
                 /* children are reflexive */
                 assert(h->cv->pair == h->pair->co);
@@ -211,11 +214,13 @@ Hedge::oppv() {
     return this->prev()->v;
 }
 
-Vertex::Vertex(GLfloat* v) : edge(NULL) {
+Vertex::Vertex(GLfloat* v) : edge(NULL), child(NULL) {
     this->val = vec3(v[0], v[1], v[2]);
 }
 
-Vertex::Vertex(Hedge* h) : edge(NULL) {
+Vertex::Vertex(vec3 val) : edge(NULL), child(NULL), val(val) { }
+
+Vertex::Vertex(Hedge* h) : edge(NULL), child(NULL) {
     if (h->pair == NULL)
         assert(!"can't handle boundary vertices atm");
 
@@ -233,7 +238,8 @@ Hedge::refine(Object* newo) {
     Vertex* m1 = this->mp;
     Vertex* m2 = this->next->mp;
 
-    Hedge* h0 = newo->new_hedge(f, v);
+    assert(v->child != NULL);
+    Hedge* h0 = newo->new_hedge(f, v->child);
     Hedge* h2 = newo->new_hedge(f, m1, h0);
     Hedge* h1 = newo->new_hedge(f, m2, h2);
     h0->next = f->edge = h1;
@@ -341,5 +347,7 @@ Vertex::refine(Object* newo) {
         q += current->pair->v->val;
     q = vec3(1.0/n)*q;
 
-    this->val = alpha*this->val + (vec3(1.0)-alpha)*q;
+    vec3 childval = alpha*this->val + (vec3(1.0)-alpha)*q;
+    this->child = new Vertex(childval);
+    newo->vertices.push_back(this->child);
 }

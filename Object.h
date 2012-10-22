@@ -18,6 +18,7 @@ public:
 
     Vertex(GLfloat* v);
     Vertex(Hedge* h);
+    Vertex(glm::vec3 val);
     int valence();
     void refine(Object*);
 };
