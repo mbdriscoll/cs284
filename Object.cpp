@@ -167,17 +167,27 @@ SubDivObject::SubDivObject(Object* base) :
     objs.push(base);
 }
 
-void
-Face::render() {
+vec3
+Face::normal() {
     vec3& v0 = this->edge->v->val;
     vec3& v1 = this->edge->next->v->val;
     vec3& v2 = this->edge->next->next->v->val;
-    vec3 norm = normalize( cross(v2-v1, v1-v0) );
+    return normalize( cross(v2-v1, v1-v0) );
+}
 
+void
+Face::render() {
+    vec3 norm = this->normal();
     glNormal3fv( (GLfloat*) &norm  );
-    glVertex3fv( (GLfloat*) &v0 );
-    glVertex3fv( (GLfloat*) &v1 );
-    glVertex3fv( (GLfloat*) &v2 );
+
+    this->edge->v->render();
+    this->edge->next->v->render();
+    this->edge->next->next->v->render();
+}
+
+void
+Vertex::render() {
+    glVertex3fv( (GLfloat*) &val );
 }
 
 Hedge*

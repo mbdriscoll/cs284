@@ -22,6 +22,7 @@ public:
     Vertex(glm::vec3 val, glm::vec3 tex);
     int valence();
     void refine(Object*);
+    void render();
 };
 
 class Face {
@@ -31,6 +32,7 @@ public:
 
     void render();
     void refine(Object* newo);
+    glm::vec3 normal();
 };
 
 class Hedge {
