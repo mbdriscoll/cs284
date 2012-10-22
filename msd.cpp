@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include <gl/glfw.h>
 #include <gl/glut.h>
 #include <gl/glu.h>
 #include <gl/gl.h>
@@ -170,6 +171,8 @@ void init_scene() {
     glShadeModel(GL_FLAT);
 
     light();
+
+    glfwLoadTexture2D("lizard.tga", GLFW_BUILD_MIPMAPS_BIT );
 }
 
 int main(int argc, char* argv[]) {

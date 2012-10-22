@@ -187,6 +187,7 @@ Face::render() {
 
 void
 Vertex::render() {
+    glTexCoord2fv( (GLfloat*) &tex );
     glVertex3fv( (GLfloat*) &val );
 }
 
