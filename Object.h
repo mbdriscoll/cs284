@@ -13,13 +13,12 @@ class Object;
 class Vertex {
 public:
     glm::vec3 val;
-    glm::vec3 tex;
     Hedge* edge;
     Vertex* child;
 
-    Vertex(GLfloat* v, GLfloat* t);
+    Vertex(GLfloat* v);
     Vertex(Hedge* h);
-    Vertex(glm::vec3 val, glm::vec3 tex);
+    Vertex(glm::vec3 val);
     int valence();
     void refine(Object*);
     void render();

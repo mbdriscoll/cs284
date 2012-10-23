@@ -51,9 +51,7 @@ SubDivObject* parseOBJ(char* path) {
 
     for(int i = 1; i <= model->numvertices; i++) {
         GLfloat* v = &model->vertices[i*3];
-        GLfloat* t = &model->texcoords[i*2];
-        printf("read tex coords %f %f\n", t[0], t[1]);
-        obj->vertices.push_back( new Vertex(v,t) );
+        obj->vertices.push_back( new Vertex(v) );
     }
 
     printf("model has %d texcoords\n", model->numtexcoords);
@@ -71,9 +69,6 @@ SubDivObject* parseOBJ(char* path) {
         vec2 t0 = vec2(tv0[0], tv0[1]);
         vec2 t1 = vec2(tv1[0], tv1[1]);
         vec2 t2 = vec2(tv2[0], tv2[1]);
-
-        printf("face has texcoords (%f,%f) (%f,%f) (%f,%f)\n",
-                tv0[0], tv0[1], tv1[0], tv1[1], tv2[0], tv2[1]);
 
         Face* f = obj->new_face(false);
         Hedge* h0 = obj->new_hedge(f, t0, v0);
@@ -200,7 +195,7 @@ void init_scene() {
          "lizard.bmp",
          SOIL_LOAD_AUTO,
          SOIL_CREATE_NEW_ID,
-         0 // SOIL_FLAG_INVERT_Y
+         SOIL_FLAG_INVERT_Y
         );
     if (texture[0] == 0)
         printf("SOIL load error: %s\n", SOIL_last_result());
