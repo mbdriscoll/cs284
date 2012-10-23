@@ -51,20 +51,31 @@ SubDivObject* parseOBJ(char* path) {
 
     for(int i = 1; i <= model->numvertices; i++) {
         GLfloat* v = &model->vertices[i*3];
-        GLfloat* t = &model->texcoords[i*3];
+        GLfloat* t = &model->texcoords[i*2];
+        printf("read tex coords %f %f\n", t[0], t[1]);
         obj->vertices.push_back( new Vertex(v,t) );
     }
 
     for(int i = 0; i < model->numtriangles; i++) {
         GLuint* t = model->triangles[i].vindices;
-        Vertex* v0 = obj->vertices[t[0]-1];
-        Vertex* v1 = obj->vertices[t[1]-1];
-        Vertex* v2 = obj->vertices[t[2]-1];
+        GLuint i0 = t[0];
+        GLuint i1 = t[1];
+        GLuint i2 = t[2];
+        Vertex* v0 = obj->vertices[i0-1];
+        Vertex* v1 = obj->vertices[i1-1];
+        Vertex* v2 = obj->vertices[i2-1];
+
+        GLfloat* tv0 = &model->texcoords[i0*2];
+        GLfloat* tv1 = &model->texcoords[i1*2];
+        GLfloat* tv2 = &model->texcoords[i2*2];
+        vec2 t0 = vec2(tv0[0], tv0[1]);
+        vec2 t1 = vec2(tv1[0], tv1[1]);
+        vec2 t2 = vec2(tv2[0], tv2[1]);
 
         Face* f = obj->new_face(false);
-        Hedge* h0 = obj->new_hedge(f, v0);
-        Hedge* h1 = obj->new_hedge(f, v1, h0);
-        Hedge* h2 = obj->new_hedge(f, v2, h1);
+        Hedge* h0 = obj->new_hedge(f, t0, v0);
+        Hedge* h1 = obj->new_hedge(f, t1, v1, h0);
+        Hedge* h2 = obj->new_hedge(f, t2, v2, h1);
 
         /* fix up circular references */
         h0->next = h2;

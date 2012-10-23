@@ -190,13 +190,12 @@ Face::render() {
 
 void
 Vertex::render() {
-    printf("using tex coords %f %f %f\n", tex[0], tex[1], tex[2]);
     glTexCoord2fv( (GLfloat*) &tex );
     glVertex3fv( (GLfloat*) &val );
 }
 
 Hedge*
-Object::new_hedge(Face* f, Vertex* v, Hedge* next) {
+Object::new_hedge(Face* f, vec2 t, Vertex* v, Hedge* next) {
     Hedge* newh = new Hedge();
     newh->f = f;
     newh->v = v;
@@ -205,6 +204,7 @@ Object::new_hedge(Face* f, Vertex* v, Hedge* next) {
     newh->co = NULL;
     newh->cv = NULL;
     newh->mp = NULL;
+    newh->tex = t;
     v->edge = newh;
     hedges.push_back(newh);
     return newh;
@@ -258,9 +258,9 @@ Hedge::refine(Object* newo) {
     Vertex* m2 = this->next->mp;
 
     assert(v->child != NULL);
-    Hedge* h0 = newo->new_hedge(f, v->child);
-    Hedge* h2 = newo->new_hedge(f, m1, h0);
-    Hedge* h1 = newo->new_hedge(f, m2, h2);
+    Hedge* h0 = newo->new_hedge(f, tex, v->child);
+    Hedge* h2 = newo->new_hedge(f, tex, m1, h0);
+    Hedge* h1 = newo->new_hedge(f, tex, m2, h2);
     h0->next = f->edge = h1;
 
     cv = h0;
@@ -286,9 +286,9 @@ Face::refine(Object* newo) {
     Vertex* v1 = pair_h1->v;
     Vertex* v2 = pair_h2->v;
 
-    Hedge* h2 = newo->new_hedge(f, v0);
-    Hedge* h1 = newo->new_hedge(f, v2, h2);
-    Hedge* h0 = newo->new_hedge(f, v1, h1);
+    Hedge* h2 = newo->new_hedge(f, pair_h0->tex, v0);
+    Hedge* h1 = newo->new_hedge(f, pair_h1->tex, v2, h2);
+    Hedge* h0 = newo->new_hedge(f, pair_h2->tex, v1, h1);
     h2->next = f->edge = h0;
 
     h0->set_pair(pair_h0);

@@ -45,6 +45,7 @@ public:
     Vertex* mp;
     Hedge* cv;
     Hedge* co;
+    glm::vec2 tex;
 
     Hedge* prev();
     Vertex* oppv();
@@ -60,7 +61,7 @@ public:
     std::vector<Hedge*> hedges;
     std::vector<Vertex*> vertices;
 
-    Hedge* new_hedge(Face* f, Vertex* v, Hedge* next=NULL);
+    Hedge* new_hedge(Face* f, glm::vec2 tex, Vertex* v, Hedge* next=NULL);
     Face* new_face(bool interior = false);
     void render();
     void check(bool postrefine=false);
