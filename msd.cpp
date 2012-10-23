@@ -86,11 +86,14 @@ SubDivObject* parseOBJ(char* path) {
 }
 
 void light() {
-    GLfloat pos0[]={100.0, 100.0, -100.0, 0.5};
-    GLfloat col0[]={0.0, 0.0, 1.0, 1.0};
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, col0);
-    //glLightfv(GL_LIGHT0, GL_SPECULAR, col0);
-    glLightfv(GL_LIGHT0, GL_POSITION, pos0);
+    return;
+    GLfloat LightAmbient[]= { 0.5f, 0.5f, 0.5f, 1.0f };  // Ambient Light Values ( NEW )
+    GLfloat LightDiffuse[]= { 1.0f, 1.0f, 1.0f, 1.0f };  // Diffuse Light Values ( NEW )
+    GLfloat LightPosition[]= { 100.0f, 100.0f, -100.0f, 1.0f }; // Light Position ( NEW )
+
+    glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);// Setup The Ambient Light
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);// Setup The Diffuse Light
+    glLightfv(GL_LIGHT1, GL_POSITION,LightPosition);// Position The Light
     glEnable(GL_LIGHT0);
 }
 
@@ -180,14 +183,14 @@ void init_scene() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_LIGHTING);
     glShadeModel(GL_SMOOTH);
+
+    GLfloat globalAmbient[] = { 0.8, 0.8, 0.8, 1.0 };
+    glLightModelfv( GL_LIGHT_MODEL_AMBIENT, globalAmbient );
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glFrontFace(GL_CW);
-
-    //light();
 
     glEnable(GL_TEXTURE_2D);
     texture[0] = SOIL_load_OGL_texture
