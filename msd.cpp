@@ -4,7 +4,6 @@
 
 #include <string>
 
-#include <gl/glfw.h>
 #include <gl/glut.h>
 #include <gl/glu.h>
 #include <gl/gl.h>
@@ -12,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
+#include "SOIL.h"
 #include "glm.h"
 #include "util.h"
 
@@ -23,8 +23,9 @@
 using namespace glm;
 using namespace std;
 
+GLuint texture[1];
 SubDivObject* sdobj;
-vec3 eye(0.0, 0.0, 1.0);
+vec3 eye(0.0, 0.0, 7.0);
 vec3 center(0.0, 0.0, 0.0);
 vec3 up(0.0, 1.0, 0.0);
 GLMmodel* model;
@@ -41,7 +42,7 @@ SubDivObject* parseOBJ(char* path) {
 
     // parse the .obj file
     model = glmReadOBJ(path);
-    glmFacetNormals(model);
+    glmUnitize(model);
 
     // reserve space for objects
     obj->faces.reserve(model->numtriangles);
@@ -76,10 +77,10 @@ SubDivObject* parseOBJ(char* path) {
 }
 
 void light() {
-    GLfloat pos0[]={100.0, 100.0, 100.0, 0.5};
-    GLfloat col0[]={1.0, 1.0, 1.0, 1.0};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, col0);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, col0);
+    GLfloat pos0[]={100.0, 100.0, -100.0, 0.5};
+    GLfloat col0[]={0.0, 0.0, 1.0, 1.0};
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, col0);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, col0);
     glLightfv(GL_LIGHT0, GL_POSITION, pos0);
     glEnable(GL_LIGHT0);
 }
@@ -93,6 +94,8 @@ void display() {
     mat4 mv = lookAt(eye,center,up);
     glLoadMatrixf(&mv[0][0]);
 
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
     sdobj->render();
 
     glutSwapBuffers();
@@ -106,7 +109,7 @@ void animate() {
     glLoadIdentity();
     glTranslatef(-10.0, -10.0, -10.0);
     glRotatef(rot, 1.0, 1.0, 0.0);
-    light();
+    //light();
     rot += 1;
     if (rot > 360) rot = 0.0;
     glutPostRedisplay();
@@ -165,14 +168,32 @@ void special(int key, int x, int y) {
 
 void init_scene() {
     glClearColor (0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glShadeModel(GL_FLAT);
+    //glEnable(GL_LIGHTING);
+    glShadeModel(GL_SMOOTH);
 
-    light();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glFrontFace(GL_CW);
 
-    glfwLoadTexture2D("lizard.tga", GLFW_BUILD_MIPMAPS_BIT );
+    //light();
+
+    glEnable(GL_TEXTURE_2D);
+    texture[0] = SOIL_load_OGL_texture
+        (
+         "lizard.bmp",
+         SOIL_LOAD_AUTO,
+         SOIL_CREATE_NEW_ID,
+         SOIL_FLAG_INVERT_Y
+        );
+    if (texture[0] == 0)
+        printf("SOIL load error: %s\n", SOIL_last_result());
+
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 }
 
 int main(int argc, char* argv[]) {

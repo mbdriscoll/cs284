@@ -10,6 +10,7 @@
 using namespace glm;
 using namespace std;
 
+extern GLuint texture[1];
 typedef std::pair<Vertex*,Vertex*> VVpair;
 
 void
@@ -180,6 +181,8 @@ Face::render() {
     vec3 norm = this->normal();
     glNormal3fv( (GLfloat*) &norm  );
 
+    glBindTexture(GL_TEXTURE_2D, texture[0]);
+
     this->edge->v->render();
     this->edge->next->v->render();
     this->edge->next->next->v->render();
@@ -187,6 +190,7 @@ Face::render() {
 
 void
 Vertex::render() {
+    printf("using tex coords %f %f %f\n", tex[0], tex[1], tex[2]);
     glTexCoord2fv( (GLfloat*) &tex );
     glVertex3fv( (GLfloat*) &val );
 }
