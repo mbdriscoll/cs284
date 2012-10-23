@@ -1,6 +1,6 @@
 M = 1.0  # big dimension of cup
 m = 0.05 # width of lip
-w = 0.10 # width of handle
+w = 0.30 # width of handle
 
 vertices = [
 
@@ -25,6 +25,14 @@ vertices = [
  (M-m, m, M-m),
  (M-m, m, m),
  (m, m, m),
+
+ # handle face
+ (0, M-w, 0.5*M+m),
+ (0, M-w, 0.5*M-m),
+ (0, M-w-m, 0.5*M),
+ (0, w+m, 0.5*M),
+ (0, w, 0.5*M+m),
+ (0, w, 0.5*M-m),
 ]
 
 faces = [
@@ -60,9 +68,20 @@ faces = [
  (14, 13, 16),
  (14, 16, 15),
 
- # handle temp
- (5, 7, 3),
- (5, 3, 1),
+  # handle face
+  (5, 7, 17),
+  (5, 17, 18),
+  (5, 18, 1),
+  (18, 19, 1),
+  (19, 20, 1),
+  (20, 22, 1),
+  (21, 3, 22),
+  (22, 3, 1),
+  (19, 3, 20),
+  (20, 3, 21),
+  (7, 3, 17),
+  (17, 3, 19),
+
 ]
 
 for point in vertices:
