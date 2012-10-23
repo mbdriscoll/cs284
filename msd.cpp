@@ -56,21 +56,24 @@ SubDivObject* parseOBJ(char* path) {
         obj->vertices.push_back( new Vertex(v,t) );
     }
 
+    printf("model has %d texcoords\n", model->numtexcoords);
     for(int i = 0; i < model->numtriangles; i++) {
-        GLuint* t = model->triangles[i].vindices;
-        GLuint i0 = t[0];
-        GLuint i1 = t[1];
-        GLuint i2 = t[2];
-        Vertex* v0 = obj->vertices[i0-1];
-        Vertex* v1 = obj->vertices[i1-1];
-        Vertex* v2 = obj->vertices[i2-1];
+        GLuint* v = model->triangles[i].vindices;
+        Vertex* v0 = obj->vertices[v[0]-1];
+        Vertex* v1 = obj->vertices[v[1]-1];
+        Vertex* v2 = obj->vertices[v[2]-1];
 
-        GLfloat* tv0 = &model->texcoords[i0*2];
-        GLfloat* tv1 = &model->texcoords[i1*2];
-        GLfloat* tv2 = &model->texcoords[i2*2];
+        GLuint* t = model->triangles[i].tindices;
+        GLfloat* tv0 = &model->texcoords[t[0]*2];
+        GLfloat* tv1 = &model->texcoords[t[1]*2];
+        GLfloat* tv2 = &model->texcoords[t[2]*2];
+
         vec2 t0 = vec2(tv0[0], tv0[1]);
         vec2 t1 = vec2(tv1[0], tv1[1]);
         vec2 t2 = vec2(tv2[0], tv2[1]);
+
+        printf("face has texcoords (%f,%f) (%f,%f) (%f,%f)\n",
+                tv0[0], tv0[1], tv1[0], tv1[1], tv2[0], tv2[1]);
 
         Face* f = obj->new_face(false);
         Hedge* h0 = obj->new_hedge(f, t0, v0);
@@ -197,7 +200,7 @@ void init_scene() {
          "lizard.bmp",
          SOIL_LOAD_AUTO,
          SOIL_CREATE_NEW_ID,
-         SOIL_FLAG_INVERT_Y
+         0 // SOIL_FLAG_INVERT_Y
         );
     if (texture[0] == 0)
         printf("SOIL load error: %s\n", SOIL_last_result());

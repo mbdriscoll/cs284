@@ -52,6 +52,7 @@ public:
     void set_midpoint(Object* newo);
     Hedge* refine(Object* newo);
     void set_pair(Hedge* o);
+    void render();
 };
 
 

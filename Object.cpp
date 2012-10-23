@@ -181,17 +181,20 @@ Face::render() {
     vec3 norm = this->normal();
     glNormal3fv( (GLfloat*) &norm  );
 
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-
-    this->edge->v->render();
-    this->edge->next->v->render();
-    this->edge->next->next->v->render();
+    this->edge->render();
+    this->edge->next->render();
+    this->edge->next->next->render();
 }
 
 void
 Vertex::render() {
-    glTexCoord2fv( (GLfloat*) &tex );
     glVertex3fv( (GLfloat*) &val );
+}
+
+void
+Hedge::render() {
+    glTexCoord2fv( (GLfloat*) &tex );
+    v->render();
 }
 
 Hedge*
@@ -257,10 +260,13 @@ Hedge::refine(Object* newo) {
     Vertex* m1 = this->mp;
     Vertex* m2 = this->next->mp;
 
+    vec2 t2 = vec2(0.5)*(tex+prev()->tex);
+    vec2 t1 = vec2(0.5)*(tex+next->tex);
+
     assert(v->child != NULL);
     Hedge* h0 = newo->new_hedge(f, tex, v->child);
-    Hedge* h2 = newo->new_hedge(f, tex, m1, h0);
-    Hedge* h1 = newo->new_hedge(f, tex, m2, h2);
+    Hedge* h2 = newo->new_hedge(f, t2, m1, h0);
+    Hedge* h1 = newo->new_hedge(f, t1, m2, h2);
     h0->next = f->edge = h1;
 
     cv = h0;
